@@ -7,6 +7,7 @@ import retrofit2.http.Query
 interface TmdbService {
     @GET("trending/all/day")
     suspend fun getTrending(
+        @Query("api_key") apiKey: String,
         @Query("page") page: Int
     ): TmdbResponse
 }
