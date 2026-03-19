@@ -34,6 +34,7 @@ import com.luuk.showtracker.ui.screen.MediaListScreen
 import com.luuk.showtracker.ui.screen.SavedMoviesScreen
 import com.luuk.showtracker.ui.theme.ShowTrackerTheme
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -123,9 +124,18 @@ class MainActivity : ComponentActivity() {
                             )
                         ) { backStackEntry ->
                             MediaDetailScreen(
-                                title = backStackEntry.arguments?.getString("title") ?: "",
-                                overview = backStackEntry.arguments?.getString("overview") ?: "",
-                                posterPath = backStackEntry.arguments?.getString("poster"),
+                                title = URLDecoder.decode(
+                                    backStackEntry.arguments?.getString("title") ?: "",
+                                    StandardCharsets.UTF_8.toString()
+                                ),
+                                overview = URLDecoder.decode(
+                                    backStackEntry.arguments?.getString("overview") ?: "",
+                                    StandardCharsets.UTF_8.toString()
+                                ),
+                                posterPath = URLDecoder.decode(
+                                    backStackEntry.arguments?.getString("poster") ?: "",
+                                    StandardCharsets.UTF_8.toString()
+                                ),
                                 onBackClick = { navController.popBackStack() }
                             )
                         }
