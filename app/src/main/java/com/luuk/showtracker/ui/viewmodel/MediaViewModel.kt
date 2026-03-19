@@ -14,22 +14,32 @@ class MediaViewModel(private val repository: MediaRepository) : ViewModel() {
     private val _mediaItems = MutableStateFlow<List<TmdbMediaItem>>(emptyList())
     val mediaItems: StateFlow<List<TmdbMediaItem>> = _mediaItems.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(true)
+    private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private var currentPage = 1
+    private var isLastPage = false
+
     init {
-        fetchTrendingMedia()
+        loadNextPage()
     }
 
-    fun fetchTrendingMedia() {
+    fun loadNextPage() {
+        if (_isLoading.value || isLastPage) return
+
         viewModelScope.launch {
             _isLoading.value = true
-            repository.getTrendingMedia()
-                .onSuccess { items ->
-                    _mediaItems.value = items
+            repository.getTrendingMedia(currentPage)
+                .onSuccess { newItems ->
+                    if (newItems.isEmpty()) {
+                        isLastPage = true
+                    } else {
+                        _mediaItems.value = _mediaItems.value + newItems
+                        currentPage++
+                    }
                     _errorMessage.value = null
                 }
                 .onFailure { error ->

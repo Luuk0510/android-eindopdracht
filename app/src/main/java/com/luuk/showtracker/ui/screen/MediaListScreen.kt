@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,24 +36,40 @@ fun MediaListScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     Box(modifier = modifier.fillMaxSize()) {
-        if (isLoading) {
+        if (isLoading && mediaItems.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        } else if (errorMessage != null) {
-            Text(
-                text = errorMessage!!,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.Center).padding(16.dp)
-            )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(mediaItems) { item ->
+                itemsIndexed(mediaItems) { index, item ->
+                    // Trigger load more when near the end (e.g., 5 items before the end)
+                    if (index >= mediaItems.size - 5 && !isLoading) {
+                        viewModel.loadNextPage()
+                    }
+                    
                     MediaItemRow(item)
                 }
+                
+                // Show loading indicator at the bottom when loading more
+                if (isLoading) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                        }
+                    }
+                }
             }
+        }
+        
+        if (errorMessage != null && mediaItems.isEmpty()) {
+            Text(
+                text = errorMessage!!,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.align(Alignment.Center).padding(16.dp)
+            )
         }
     }
 }

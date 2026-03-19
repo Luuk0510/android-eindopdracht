@@ -5,10 +5,9 @@ import com.luuk.showtracker.data.model.TmdbMediaItem
 
 class MediaRepository(private val tmdbService: TmdbService) {
     
-    suspend fun getTrendingMedia(): Result<List<TmdbMediaItem>> {
+    suspend fun getTrendingMedia(page: Int): Result<List<TmdbMediaItem>> {
         return try {
-            // No need to pass api_key here anymore!
-            val response = tmdbService.getTrending()
+            val response = tmdbService.getTrending(page)
             Result.success(response.results)
         } catch (e: Exception) {
             Result.failure(e)
