@@ -21,16 +21,21 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.luuk.showtracker.data.api.RetrofitClient
 import com.luuk.showtracker.data.repository.MediaRepository
+import com.luuk.showtracker.ui.screen.MediaDetailScreen
 import com.luuk.showtracker.ui.screen.MediaListScreen
 import com.luuk.showtracker.ui.screen.SavedMoviesScreen
 import com.luuk.showtracker.ui.theme.ShowTrackerTheme
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,38 +57,41 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        NavigationBar {
-                            val navBackStackEntry by navController.currentBackStackEntryAsState()
-                            val currentDestination = navBackStackEntry?.destination
-                            
-                            NavigationBarItem(
-                                icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                                label = { Text("Home") },
-                                selected = currentDestination?.hierarchy?.any { it.route == "home" } == true,
-                                onClick = {
-                                    navController.navigate("home") {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val currentDestination = navBackStackEntry?.destination
+                        
+                        // Only show bottom bar on top-level screens
+                        if (currentDestination?.route == "home" || currentDestination?.route == "saved") {
+                            NavigationBar {
+                                NavigationBarItem(
+                                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                                    label = { Text("Home") },
+                                    selected = currentDestination.hierarchy.any { it.route == "home" },
+                                    onClick = {
+                                        navController.navigate("home") {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
-                                }
-                            )
-                            NavigationBarItem(
-                                icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                                label = { Text("Saved") },
-                                selected = currentDestination?.hierarchy?.any { it.route == "saved" } == true,
-                                onClick = {
-                                    navController.navigate("saved") {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                                )
+                                NavigationBarItem(
+                                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                                    label = { Text("Saved") },
+                                    selected = currentDestination.hierarchy.any { it.route == "saved" },
+                                    onClick = {
+                                        navController.navigate("saved") {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 ) { innerPadding ->
@@ -93,10 +101,33 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("home") { 
-                            MediaListScreen(viewModel = mediaViewModel) 
+                            MediaListScreen(
+                                viewModel = mediaViewModel,
+                                onItemClick = { item ->
+                                    val title = URLEncoder.encode(item.title ?: item.name ?: "Unknown", StandardCharsets.UTF_8.toString())
+                                    val overview = URLEncoder.encode(item.overview, StandardCharsets.UTF_8.toString())
+                                    val poster = URLEncoder.encode(item.posterPath ?: "", StandardCharsets.UTF_8.toString())
+                                    navController.navigate("details/$title/$overview/$poster")
+                                }
+                            ) 
                         }
                         composable("saved") { 
                             SavedMoviesScreen() 
+                        }
+                        composable(
+                            route = "details/{title}/{overview}/{poster}",
+                            arguments = listOf(
+                                navArgument("title") { type = NavType.StringType },
+                                navArgument("overview") { type = NavType.StringType },
+                                navArgument("poster") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            MediaDetailScreen(
+                                title = backStackEntry.arguments?.getString("title") ?: "",
+                                overview = backStackEntry.arguments?.getString("overview") ?: "",
+                                posterPath = backStackEntry.arguments?.getString("poster"),
+                                onBackClick = { navController.popBackStack() }
+                            )
                         }
                     }
                 }

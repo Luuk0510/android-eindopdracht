@@ -1,5 +1,6 @@
 package com.luuk.showtracker.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,11 @@ import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
-fun MediaListScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
+fun MediaListScreen(
+    viewModel: MediaViewModel, 
+    onItemClick: (TmdbMediaItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val mediaItems by viewModel.mediaItems.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -45,15 +50,16 @@ fun MediaListScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 itemsIndexed(mediaItems) { index, item ->
-                    // Trigger load more when near the end (e.g., 5 items before the end)
                     if (index >= mediaItems.size - 5 && !isLoading) {
                         viewModel.loadNextPage()
                     }
                     
-                    MediaItemRow(item)
+                    MediaItemRow(
+                        item = item, 
+                        onClick = { onItemClick(item) }
+                    )
                 }
                 
-                // Show loading indicator at the bottom when loading more
                 if (isLoading) {
                     item {
                         Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -75,9 +81,11 @@ fun MediaListScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MediaItemRow(item: TmdbMediaItem) {
+fun MediaItemRow(item: TmdbMediaItem, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
