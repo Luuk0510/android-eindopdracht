@@ -19,42 +19,31 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.luuk.showtracker.BuildConfig
-import com.luuk.showtracker.data.api.RetrofitClient
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
-fun MediaListScreen(modifier: Modifier = Modifier) {
-    // State to hold our list
-    var mediaItems by remember { mutableStateOf(emptyList<TmdbMediaItem>()) }
-    var isLoading by remember { mutableStateOf(true) }
-
-    // Fetch data when the screen opens
-    LaunchedEffect(Unit) {
-        try {
-            // BuildConfig.TMDB_API_KEY comes from your secrets.properties
-            val response = RetrofitClient.tmdbService.getTrending(BuildConfig.TMDB_API_KEY)
-            mediaItems = response.results
-        } catch (e: Exception) {
-            // Handle errors here (e.g. log them)
-        } finally {
-            isLoading = false
-        }
-    }
+fun MediaListScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
+    val mediaItems by viewModel.mediaItems.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     Box(modifier = modifier.fillMaxSize()) {
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else if (errorMessage != null) {
+            Text(
+                text = errorMessage!!,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.align(Alignment.Center).padding(16.dp)
+            )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -76,7 +65,6 @@ fun MediaItemRow(item: TmdbMediaItem) {
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
-            // Coil Image Loading
             AsyncImage(
                 model = "https://image.tmdb.org/t/p/w200${item.posterPath}",
                 contentDescription = null,
