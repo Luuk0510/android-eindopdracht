@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +14,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +53,8 @@ fun TrendingMediaScreen(
 ) {
     val mediaItems by viewModel.mediaItems.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
+    val watchedIds by viewModel.watchedIds.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val configuration = LocalConfiguration.current
@@ -85,6 +93,8 @@ fun TrendingMediaScreen(
 
                     MediaItemRow(
                         item = item,
+                        isWatched = watchedIds.contains(item.id),
+                        ratingBadge = reviews[item.id]?.rating?.toString(),
                         onClick = { onItemClick(item) }
                     )
                 }
@@ -123,7 +133,12 @@ fun TrendingMediaScreen(
 }
 
 @Composable
-fun MediaItemRow(item: TmdbMediaItem, onClick: () -> Unit) {
+fun MediaItemRow(
+    item: TmdbMediaItem,
+    isWatched: Boolean = false,
+    ratingBadge: String? = null,
+    onClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -134,15 +149,60 @@ fun MediaItemRow(item: TmdbMediaItem, onClick: () -> Unit) {
             colors = CardDefaults.cardColors(containerColor = SurfaceDark),
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
         ) {
-            AsyncImage(
-                model = "https://image.tmdb.org/t/p/w200${item.posterPath}",
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(0.68f)
-                    .clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.Crop
-            )
+            Box {
+                AsyncImage(
+                    model = "https://image.tmdb.org/t/p/w200${item.posterPath}",
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(0.68f)
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+                if (isWatched) {
+                    Surface(
+                        color = Color(0xCC121212),
+                        shape = RoundedCornerShape(bottomStart = 12.dp),
+                        modifier = Modifier.align(Alignment.TopEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Visibility,
+                            contentDescription = "Watched",
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+
+                if (!ratingBadge.isNullOrBlank()) {
+                    Surface(
+                        color = Color(0xCC121212),
+                        shape = RoundedCornerShape(topStart = 12.dp),
+                        modifier = Modifier.align(Alignment.BottomEnd)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = ratingBadge,
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier
+                                    .padding(start = 4.dp)
+                                    .size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         Text(

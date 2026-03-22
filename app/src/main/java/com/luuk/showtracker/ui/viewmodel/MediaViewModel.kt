@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
+import com.luuk.showtracker.data.local.WatchedStorage
 import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.repository.MediaRepository
@@ -19,7 +20,8 @@ import java.time.format.DateTimeFormatter
 class MediaViewModel(
     private val repository: MediaRepository,
     private val reviewStorage: ReviewStorage,
-    private val savedMediaStorage: SavedMediaStorage
+    private val savedMediaStorage: SavedMediaStorage,
+    private val watchedStorage: WatchedStorage
 ) : ViewModel() {
 
     private val _mediaItems = MutableStateFlow<List<TmdbMediaItem>>(emptyList())
@@ -33,6 +35,9 @@ class MediaViewModel(
 
     private val _reviews = MutableStateFlow<Map<Int, MediaReview>>(reviewStorage.loadReviews())
     val reviews: StateFlow<Map<Int, MediaReview>> = _reviews.asStateFlow()
+
+    private val _watchedIds = MutableStateFlow(watchedStorage.loadWatchedIds())
+    val watchedIds: StateFlow<Set<Int>> = _watchedIds.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -109,6 +114,13 @@ class MediaViewModel(
 
     fun isSaved(itemId: Int): Boolean {
         return _savedItems.value.any { it.id == itemId }
+    }
+
+    fun toggleWatched(itemId: Int) {
+        _watchedIds.value = _watchedIds.value.toMutableSet().apply {
+            if (contains(itemId)) remove(itemId) else add(itemId)
+        }
+        watchedStorage.saveWatchedIds(_watchedIds.value)
     }
 
     fun saveReview(

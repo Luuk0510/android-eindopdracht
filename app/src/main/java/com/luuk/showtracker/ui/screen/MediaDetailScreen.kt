@@ -22,16 +22,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -64,10 +65,12 @@ fun MediaDetailScreen(
     posterPath: String?,
     genreNames: List<String>,
     isSaved: Boolean,
+    isWatched: Boolean,
     currentReview: MediaReview?,
     onReviewSaved: (String, String, Int) -> Unit,
     onReviewDeleted: () -> Unit,
     onSaveClick: () -> Unit,
+    onWatchedToggle: () -> Unit,
     onBackClick: () -> Unit
 ) {
     var showReviewDialog by remember { mutableStateOf(false) }
@@ -121,23 +124,29 @@ fun MediaDetailScreen(
             ) {
                 IconButton(
                     onClick = onBackClick,
-                    modifier = Modifier.align(Alignment.TopStart)
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .size(52.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(30.dp)
                     )
                 }
 
                 IconButton(
                     onClick = onSaveClick,
-                    modifier = Modifier.align(Alignment.TopEnd)
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(52.dp)
                 ) {
                     Icon(
-                        imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = if (isSaved) "Remove from saved" else "Save movie",
-                        tint = if (isSaved) MaterialTheme.colorScheme.secondary else Color.White
+                        imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                        contentDescription = if (isSaved) "Remove from watchlist" else "Save to watchlist",
+                        tint = if (isSaved) MaterialTheme.colorScheme.secondary else Color.White,
+                        modifier = Modifier.size(30.dp)
                     )
                 }
             }
@@ -198,14 +207,33 @@ fun MediaDetailScreen(
                 modifier = Modifier.height(38.dp),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Star,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = if (currentReview == null) "Write a review" else "Edit review",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+                onClick = onWatchedToggle,
+                modifier = Modifier.height(38.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (isWatched) {
+                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.18f)
+                    } else {
+                        Color.Transparent
+                    },
+                    contentColor = if (isWatched) {
+                        MaterialTheme.colorScheme.secondary
+                    } else {
+                        Color.White
+                    }
+                )
+            ) {
+                Text(
+                    text = if (isWatched) "Watched" else "Mark as watched",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -229,7 +257,7 @@ fun MediaDetailScreen(
                             )
                             Text(
                                 text = "${currentReview.rating}/10",
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.secondary
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -237,7 +265,7 @@ fun MediaDetailScreen(
                                 imageVector = Icons.Filled.Star,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
 
@@ -256,12 +284,6 @@ fun MediaDetailScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White
                         )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        TextButton(onClick = onReviewDeleted) {
-                            Text("Delete review")
-                        }
                     }
                 }
             }

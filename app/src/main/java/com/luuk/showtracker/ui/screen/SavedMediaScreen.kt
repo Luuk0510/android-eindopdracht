@@ -28,6 +28,8 @@ fun SavedMediaScreen(
     modifier: Modifier = Modifier
 ) {
     val savedItems by viewModel.savedItems.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
+    val watchedIds by viewModel.watchedIds.collectAsState()
     val configuration = LocalConfiguration.current
     val columnCount = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
     val shownItems = savedItems.filter { item ->
@@ -41,7 +43,7 @@ fun SavedMediaScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "No saved media yet.",
+                text = "No watchlist items yet.",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(16.dp)
             )
@@ -70,6 +72,8 @@ fun SavedMediaScreen(
             items(shownItems, key = { it.id }) { item ->
                 MediaItemRow(
                     item = item,
+                    isWatched = watchedIds.contains(item.id),
+                    ratingBadge = reviews[item.id]?.rating?.toString(),
                     onClick = { onItemClick(item.id) }
                 )
             }

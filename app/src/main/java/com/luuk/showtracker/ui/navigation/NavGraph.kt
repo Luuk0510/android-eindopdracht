@@ -7,10 +7,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalMovies
 import androidx.compose.material.icons.filled.Search
@@ -47,7 +48,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.data.model.genreNames
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
@@ -99,7 +99,13 @@ fun ShowTrackerApp(
             if (isTopLevelScreen) {
                 NavigationBar {
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                        icon = {
+                            Icon(
+                                Icons.Default.Home,
+                                contentDescription = null,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        },
                         label = { Text("Trending") },
                         selected = currentDestination.hierarchy.any { it.route == Screen.Home.route },
                         colors = NavigationBarItemDefaults.colors(
@@ -118,8 +124,14 @@ fun ShowTrackerApp(
                         }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                        label = { Text("Saved") },
+                        icon = {
+                            Icon(
+                                Icons.Default.Bookmark,
+                                contentDescription = null,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        },
+                        label = { Text("Watchlist") },
                         selected = currentDestination.hierarchy.any { it.route == Screen.Saved.route },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -194,6 +206,7 @@ fun SetupNavGraph(
         ) { backStackEntry ->
             val savedItems by viewModel.savedItems.collectAsState()
             val reviews by viewModel.reviews.collectAsState()
+            val watchedIds by viewModel.watchedIds.collectAsState()
             val itemId = backStackEntry.arguments?.getInt("id") ?: 0
             val title = URLDecoder.decode(
                 backStackEntry.arguments?.getString("title") ?: "",
@@ -225,12 +238,14 @@ fun SetupNavGraph(
                 posterPath = mediaItem.posterPath,
                 genreNames = genres.split("|").filter { it.isNotBlank() },
                 isSaved = savedItems.any { it.id == itemId },
+                isWatched = watchedIds.contains(itemId),
                 currentReview = reviews[itemId],
                 onReviewSaved = { reviewTitle, reviewText, rating ->
                     viewModel.saveReview(itemId, reviewTitle, reviewText, rating)
                 },
                 onReviewDeleted = { viewModel.deleteReview(itemId) },
                 onSaveClick = { viewModel.toggleSaved(mediaItem) },
+                onWatchedToggle = { viewModel.toggleWatched(itemId) },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -272,7 +287,8 @@ private fun ShowTrackerTopBar(
                 Icon(
                     imageVector = Icons.Default.LocalMovies,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
                 )
                 Spacer(modifier = Modifier.padding(horizontal = 5.dp))
                 Text(
@@ -289,6 +305,7 @@ private fun ShowTrackerTopBar(
                     modifier = Modifier
                         .clickable(onClick = onSearchClick)
                         .padding(6.dp)
+                        .size(28.dp)
                 )
             }
 
