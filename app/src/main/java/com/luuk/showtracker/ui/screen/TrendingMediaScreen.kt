@@ -41,7 +41,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import coil.compose.AsyncImage
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.theme.SurfaceDark
-import com.luuk.showtracker.ui.theme.TextMuted
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
@@ -71,73 +70,145 @@ fun TrendingMediaScreen(
         viewModel.searchMedia(searchQuery)
     }
 
+    TrendingMediaContent(
+        mediaItems = mediaItems,
+        shownItems = shownItems,
+        isLoading = isLoading,
+        errorMessage = errorMessage,
+        searchQuery = searchQuery,
+        columnCount = columnCount,
+        modifier = modifier,
+        isWatched = { itemId -> watchedIds.contains(itemId) },
+        ratingBadge = { itemId -> reviews[itemId]?.rating?.toString() },
+        onLoadNextPage = viewModel::loadNextPage,
+        onItemClick = onItemClick
+    )
+}
+
+@Composable
+private fun TrendingMediaContent(
+    mediaItems: List<TmdbMediaItem>,
+    shownItems: List<TmdbMediaItem>,
+    isLoading: Boolean,
+    errorMessage: String?,
+    searchQuery: String,
+    columnCount: Int,
+    modifier: Modifier = Modifier,
+    isWatched: (Int) -> Boolean,
+    ratingBadge: (Int) -> String?,
+    onLoadNextPage: () -> Unit,
+    onItemClick: (TmdbMediaItem) -> Unit
+) {
     Box(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = TrendingMediaScreenDefaults.GridOuterPadding)
     ) {
         if (isLoading && mediaItems.isEmpty()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            CenterLoadingIndicator()
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columnCount),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(TrendingMediaScreenDefaults.GridContentPadding),
-                verticalArrangement = Arrangement.spacedBy(TrendingMediaScreenDefaults.GridSpacing),
-                horizontalArrangement = Arrangement.spacedBy(TrendingMediaScreenDefaults.GridSpacing)
-            ) {
-                itemsIndexed(shownItems) { index, item ->
-                    if (
-                        searchQuery.isBlank() &&
-                        index >= shownItems.size - TrendingMediaScreenDefaults.PrefetchThreshold &&
-                        !isLoading
-                    ) {
-                        viewModel.loadNextPage()
-                    }
-
-                    MediaItemRow(
-                        item = item,
-                        isWatched = watchedIds.contains(item.id),
-                        ratingBadge = reviews[item.id]?.rating?.toString(),
-                        onClick = { onItemClick(item) }
-                    )
-                }
-
-                if (isLoading) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(TrendingMediaScreenDefaults.GridContentPadding),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(TrendingMediaScreenDefaults.LoadingIndicatorSize)
-                            )
-                        }
-                    }
-                }
-            }
+            TrendingMediaGrid(
+                shownItems = shownItems,
+                isLoading = isLoading,
+                searchQuery = searchQuery,
+                columnCount = columnCount,
+                isWatched = isWatched,
+                ratingBadge = ratingBadge,
+                onLoadNextPage = onLoadNextPage,
+                onItemClick = onItemClick
+            )
         }
-        
+
         if (errorMessage != null && mediaItems.isEmpty()) {
-            Text(
-                text = errorMessage!!,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(TrendingMediaScreenDefaults.GridContentPadding)
+            CenterMessage(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error
             )
         }
 
         if (!isLoading && shownItems.isEmpty() && searchQuery.isNotBlank()) {
-            Text(
+            CenterMessage(
                 text = "No results found.",
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.align(Alignment.Center)
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
     }
+}
+
+@Composable
+private fun TrendingMediaGrid(
+    shownItems: List<TmdbMediaItem>,
+    isLoading: Boolean,
+    searchQuery: String,
+    columnCount: Int,
+    isWatched: (Int) -> Boolean,
+    ratingBadge: (Int) -> String?,
+    onLoadNextPage: () -> Unit,
+    onItemClick: (TmdbMediaItem) -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(columnCount),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(TrendingMediaScreenDefaults.GridContentPadding),
+        verticalArrangement = Arrangement.spacedBy(TrendingMediaScreenDefaults.GridSpacing),
+        horizontalArrangement = Arrangement.spacedBy(TrendingMediaScreenDefaults.GridSpacing)
+    ) {
+        itemsIndexed(shownItems) { index, item ->
+            if (
+                searchQuery.isBlank() &&
+                index >= shownItems.size - TrendingMediaScreenDefaults.PrefetchThreshold &&
+                !isLoading
+            ) {
+                onLoadNextPage()
+            }
+
+            MediaItemRow(
+                item = item,
+                isWatched = isWatched(item.id),
+                ratingBadge = ratingBadge(item.id),
+                onClick = { onItemClick(item) }
+            )
+        }
+
+        if (isLoading) {
+            item {
+                GridLoadingItem()
+            }
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.CenterLoadingIndicator() {
+    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+}
+
+@Composable
+private fun GridLoadingItem() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(TrendingMediaScreenDefaults.GridContentPadding),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(TrendingMediaScreenDefaults.LoadingIndicatorSize)
+        )
+    }
+}
+
+@Composable
+private fun BoxScope.CenterMessage(
+    text: String,
+    color: Color
+) {
+    Text(
+        text = text,
+        color = color,
+        modifier = Modifier
+            .align(Alignment.Center)
+            .padding(TrendingMediaScreenDefaults.GridContentPadding)
+    )
 }
 
 @Composable

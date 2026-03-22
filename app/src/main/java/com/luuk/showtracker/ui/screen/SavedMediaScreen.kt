@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
@@ -41,46 +42,97 @@ fun SavedMediaScreen(
         mediaTitle.contains(searchQuery, ignoreCase = true)
     }
 
-    if (savedItems.isEmpty()) {
-        Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
+    SavedMediaContent(
+        savedItems = savedItems,
+        shownItems = shownItems,
+        columnCount = columnCount,
+        modifier = modifier,
+        isWatched = { itemId -> watchedIds.contains(itemId) },
+        ratingBadge = { itemId -> reviews[itemId]?.rating?.toString() },
+        onItemClick = onItemClick
+    )
+}
+
+@Composable
+private fun SavedMediaContent(
+    savedItems: List<TmdbMediaItem>,
+    shownItems: List<TmdbMediaItem>,
+    columnCount: Int,
+    modifier: Modifier = Modifier,
+    isWatched: (Int) -> Boolean,
+    ratingBadge: (Int) -> String?,
+    onItemClick: (Int) -> Unit
+) {
+    when {
+        savedItems.isEmpty() -> {
+            WatchlistMessage(
                 text = "No watchlist items yet.",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(SavedMediaScreenDefaults.ScreenPadding)
+                modifier = modifier
             )
         }
-    } else if (shownItems.isEmpty()) {
-        Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
+
+        shownItems.isEmpty() -> {
+            WatchlistMessage(
                 text = "No results found.",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(SavedMediaScreenDefaults.ScreenPadding)
+                modifier = modifier
             )
         }
-    } else {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(columnCount),
-            modifier = modifier
-                .fillMaxSize()
-                .padding(horizontal = SavedMediaScreenDefaults.GridOuterPadding),
-            contentPadding = PaddingValues(SavedMediaScreenDefaults.ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing),
-            horizontalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing)
-        ) {
-            items(shownItems, key = { it.id }) { item ->
-                MediaItemRow(
-                    item = item,
-                    isWatched = watchedIds.contains(item.id),
-                    ratingBadge = reviews[item.id]?.rating?.toString(),
-                    onClick = { onItemClick(item.id) }
-                )
-            }
+
+        else -> {
+            WatchlistGrid(
+                shownItems = shownItems,
+                columnCount = columnCount,
+                modifier = modifier,
+                isWatched = isWatched,
+                ratingBadge = ratingBadge,
+                onItemClick = onItemClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun WatchlistMessage(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(SavedMediaScreenDefaults.ScreenPadding)
+        )
+    }
+}
+
+@Composable
+private fun WatchlistGrid(
+    shownItems: List<TmdbMediaItem>,
+    columnCount: Int,
+    modifier: Modifier = Modifier,
+    isWatched: (Int) -> Boolean,
+    ratingBadge: (Int) -> String?,
+    onItemClick: (Int) -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(columnCount),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = SavedMediaScreenDefaults.GridOuterPadding),
+        contentPadding = PaddingValues(SavedMediaScreenDefaults.ScreenPadding),
+        verticalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing),
+        horizontalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing)
+    ) {
+        items(shownItems, key = { it.id }) { item ->
+            MediaItemRow(
+                item = item,
+                isWatched = isWatched(item.id),
+                ratingBadge = ratingBadge(item.id),
+                onClick = { onItemClick(item.id) }
+            )
         }
     }
 }
