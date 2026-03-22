@@ -86,7 +86,7 @@ fun MediaDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(520.dp)
+                .height(MediaDetailScreenDefaults.PosterHeight)
         ) {
             if (!posterPath.isNullOrBlank()) {
                 AsyncImage(
@@ -108,9 +108,9 @@ fun MediaDetailScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color(0x66000000),
+                                MediaDetailScreenDefaults.PosterOverlayTopColor,
                                 Color.Transparent,
-                                Color(0xCC121212)
+                                MediaDetailScreenDefaults.PosterOverlayBottomColor
                             )
                         )
                     )
@@ -120,19 +120,22 @@ fun MediaDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                    .padding(
+                        horizontal = MediaDetailScreenDefaults.TopActionsHorizontalPadding,
+                        vertical = MediaDetailScreenDefaults.TopActionsVerticalPadding
+                    )
             ) {
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .size(52.dp)
+                        .size(MediaDetailScreenDefaults.TopIconButtonSize)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = Color.White,
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(MediaDetailScreenDefaults.TopIconSize)
                     )
                 }
 
@@ -140,13 +143,13 @@ fun MediaDetailScreen(
                     onClick = onSaveClick,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .size(52.dp)
+                        .size(MediaDetailScreenDefaults.TopIconButtonSize)
                 ) {
                     Icon(
                         imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                         contentDescription = if (isSaved) "Remove from watchlist" else "Save to watchlist",
                         tint = if (isSaved) MaterialTheme.colorScheme.secondary else Color.White,
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(MediaDetailScreenDefaults.TopIconSize)
                     )
                 }
             }
@@ -154,7 +157,12 @@ fun MediaDetailScreen(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 8.dp)
+                    .padding(
+                        start = MediaDetailScreenDefaults.DetailHorizontalPadding,
+                        end = MediaDetailScreenDefaults.DetailHorizontalPadding,
+                        top = MediaDetailScreenDefaults.TitleBlockTopPadding,
+                        bottom = MediaDetailScreenDefaults.TitleBlockBottomPadding
+                    )
             ) {
                 Text(
                     text = title,
@@ -164,7 +172,7 @@ fun MediaDetailScreen(
                 )
 
                 if (genreNames.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.GenreSpacing))
                     Row(
                         modifier = Modifier.horizontalScroll(rememberScrollState())
                     ) {
@@ -174,12 +182,20 @@ fun MediaDetailScreen(
                                 color = MaterialTheme.colorScheme.onSecondary,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
-                                    .padding(end = 8.dp, bottom = 2.dp)
+                                    .padding(
+                                        end = MediaDetailScreenDefaults.GenrePillSpacing,
+                                        bottom = MediaDetailScreenDefaults.GenreSpacing
+                                    )
                                     .background(
                                         color = MaterialTheme.colorScheme.secondary,
-                                        shape = RoundedCornerShape(999.dp)
+                                        shape = RoundedCornerShape(
+                                            MediaDetailScreenDefaults.GenrePillCornerRadius
+                                        )
                                     )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                                    .padding(
+                                        horizontal = MediaDetailScreenDefaults.GenrePillHorizontalPadding,
+                                        vertical = MediaDetailScreenDefaults.GenrePillVerticalPadding
+                                    )
                             )
                         }
                     }
@@ -187,25 +203,28 @@ fun MediaDetailScreen(
             }
         }
 
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(MediaDetailScreenDefaults.DetailHorizontalPadding)) {
             Text(
                 text = "Overview",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.OverviewSpacing))
             Text(
                 text = overview,
                 style = MaterialTheme.typography.bodyLarge,
                 color = TextMuted
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.SectionSpacing))
 
             Button(
                 onClick = { showReviewDialog = true },
-                modifier = Modifier.height(38.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
+                modifier = Modifier.height(MediaDetailScreenDefaults.ActionButtonHeight),
+                contentPadding = PaddingValues(
+                    horizontal = MediaDetailScreenDefaults.ActionButtonHorizontalPadding,
+                    vertical = MediaDetailScreenDefaults.ActionButtonVerticalPadding
+                )
             ) {
                 Text(
                     text = if (currentReview == null) "Write a review" else "Edit review",
@@ -213,15 +232,20 @@ fun MediaDetailScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.ButtonSpacing))
 
             OutlinedButton(
                 onClick = onWatchedToggle,
-                modifier = Modifier.height(38.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
+                modifier = Modifier.height(MediaDetailScreenDefaults.ActionButtonHeight),
+                contentPadding = PaddingValues(
+                    horizontal = MediaDetailScreenDefaults.ActionButtonHorizontalPadding,
+                    vertical = MediaDetailScreenDefaults.ActionButtonVerticalPadding
+                ),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = if (isWatched) {
-                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.18f)
+                        MaterialTheme.colorScheme.secondary.copy(
+                            alpha = MediaDetailScreenDefaults.WatchedButtonAlpha
+                        )
                     } else {
                         Color.Transparent
                     },
@@ -239,12 +263,12 @@ fun MediaDetailScreen(
             }
 
             if (currentReview != null) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.SectionSpacing))
                 Surface(
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(MediaDetailScreenDefaults.ReviewCardCornerRadius),
                     color = MaterialTheme.colorScheme.surface
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(MediaDetailScreenDefaults.ReviewCardPadding)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -260,16 +284,16 @@ fun MediaDetailScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.secondary
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(MediaDetailScreenDefaults.RatingStarSpacing))
                             Icon(
                                 imageVector = Icons.Filled.Star,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(MediaDetailScreenDefaults.ReviewRatingStarSize)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.ReviewDateSpacing))
 
                         Text(
                             text = currentReview.dateTime,
@@ -277,7 +301,7 @@ fun MediaDetailScreen(
                             color = TextMuted
                         )
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.ReviewTextSpacing))
 
                         Text(
                             text = currentReview.reviewText,
@@ -298,11 +322,11 @@ fun MediaDetailScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = MediaDetailScreenDefaults.DialogOuterPadding),
                 shape = MaterialTheme.shapes.extraLarge,
                 color = MaterialTheme.colorScheme.surface
             ) {
-                Column(modifier = Modifier.padding(24.dp)) {
+                Column(modifier = Modifier.padding(MediaDetailScreenDefaults.DialogInnerPadding)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -330,7 +354,7 @@ fun MediaDetailScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.DialogSectionSpacing))
 
                     OutlinedTextField(
                         value = reviewText,
@@ -338,10 +362,10 @@ fun MediaDetailScreen(
                         label = { Text("Write your review") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(140.dp)
+                            .height(MediaDetailScreenDefaults.ReviewTextFieldHeight)
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.DialogSectionSpacing))
 
                     Text(
                         text = if (selectedRating > 0) "$selectedRating / 10 stars" else "Tap a star",
@@ -351,11 +375,13 @@ fun MediaDetailScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.RatingSectionSpacing))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(
+                            MediaDetailScreenDefaults.RatingStarSpacing
+                        )
                     ) {
                         for (rating in 1..10) {
                             Box(
@@ -379,7 +405,7 @@ fun MediaDetailScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.DialogActionsTopSpacing))
 
                     Row(modifier = Modifier.fillMaxWidth()) {
                         if (currentReview != null) {
@@ -420,4 +446,41 @@ fun MediaDetailScreen(
             }
         }
     }
+}
+
+private object MediaDetailScreenDefaults {
+    val PosterHeight = 520.dp
+    val PosterOverlayTopColor = Color(0x66000000)
+    val PosterOverlayBottomColor = Color(0xCC121212)
+    val TopActionsHorizontalPadding = 8.dp
+    val TopActionsVerticalPadding = 12.dp
+    val TopIconButtonSize = 52.dp
+    val TopIconSize = 30.dp
+    val DetailHorizontalPadding = 20.dp
+    val TitleBlockTopPadding = 24.dp
+    val TitleBlockBottomPadding = 8.dp
+    val GenreSpacing = 2.dp
+    val GenrePillSpacing = 8.dp
+    val GenrePillCornerRadius = 999.dp
+    val GenrePillHorizontalPadding = 12.dp
+    val GenrePillVerticalPadding = 6.dp
+    val OverviewSpacing = 8.dp
+    val SectionSpacing = 16.dp
+    val ButtonSpacing = 10.dp
+    val ActionButtonHeight = 38.dp
+    val ActionButtonHorizontalPadding = 14.dp
+    val ActionButtonVerticalPadding = 4.dp
+    const val WatchedButtonAlpha = 0.18f
+    val ReviewCardCornerRadius = 18.dp
+    val ReviewCardPadding = 16.dp
+    val ReviewRatingStarSize = 22.dp
+    val ReviewDateSpacing = 6.dp
+    val ReviewTextSpacing = 12.dp
+    val DialogOuterPadding = 20.dp
+    val DialogInnerPadding = 24.dp
+    val DialogSectionSpacing = 12.dp
+    val RatingSectionSpacing = 16.dp
+    val DialogActionsTopSpacing = 24.dp
+    val ReviewTextFieldHeight = 140.dp
+    val RatingStarSpacing = 4.dp
 }

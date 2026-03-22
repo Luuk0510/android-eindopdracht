@@ -103,7 +103,7 @@ fun ShowTrackerApp(
                             Icon(
                                 Icons.Default.Home,
                                 contentDescription = null,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(NavGraphDefaults.NavigationIconSize)
                             )
                         },
                         label = { Text("Trending") },
@@ -111,7 +111,9 @@ fun ShowTrackerApp(
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = NavGraphDefaults.SelectedItemIndicatorAlpha
+                            )
                         ),
                         onClick = {
                             navController.navigate(Screen.Home.route) {
@@ -128,7 +130,7 @@ fun ShowTrackerApp(
                             Icon(
                                 Icons.Default.Bookmark,
                                 contentDescription = null,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(NavGraphDefaults.NavigationIconSize)
                             )
                         },
                         label = { Text("Watchlist") },
@@ -136,7 +138,9 @@ fun ShowTrackerApp(
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = NavGraphDefaults.SelectedItemIndicatorAlpha
+                            )
                         ),
                         onClick = {
                             navController.navigate(Screen.Saved.route) {
@@ -278,7 +282,10 @@ private fun ShowTrackerTopBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(
+                    horizontal = NavGraphDefaults.TopBarHorizontalPadding,
+                    vertical = NavGraphDefaults.TopBarVerticalPadding
+                )
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -288,9 +295,9 @@ private fun ShowTrackerTopBar(
                     imageVector = Icons.Default.LocalMovies,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(NavGraphDefaults.TopBarIconSize)
                 )
-                Spacer(modifier = Modifier.padding(horizontal = 5.dp))
+                Spacer(modifier = Modifier.padding(horizontal = NavGraphDefaults.TopBarTitleSpacing))
                 Text(
                     text = "ShowTracker",
                     color = MaterialTheme.colorScheme.primary,
@@ -304,8 +311,8 @@ private fun ShowTrackerTopBar(
                     tint = Color.White,
                     modifier = Modifier
                         .clickable(onClick = onSearchClick)
-                        .padding(6.dp)
-                        .size(28.dp)
+                        .padding(NavGraphDefaults.SearchIconPadding)
+                        .size(NavGraphDefaults.TopBarIconSize)
                 )
             }
 
@@ -318,7 +325,7 @@ private fun ShowTrackerTopBar(
                     modifier = Modifier
                         .focusRequester(focusRequester)
                         .fillMaxWidth()
-                        .padding(top = 12.dp)
+                        .padding(top = NavGraphDefaults.SearchFieldTopPadding)
                 )
             }
         }
@@ -338,4 +345,16 @@ private fun navigateToDetails(
     val genres = URLEncoder.encode(item.genreNames().joinToString("|"), StandardCharsets.UTF_8.toString())
 
     navController.navigate(Screen.Details.createRoute(item.id, title, overview, poster, genres))
+}
+
+private object NavGraphDefaults {
+    const val SelectedItemIndicatorAlpha = 0.16f
+
+    val NavigationIconSize = 28.dp
+    val TopBarIconSize = 28.dp
+    val TopBarHorizontalPadding = 16.dp
+    val TopBarVerticalPadding = 12.dp
+    val TopBarTitleSpacing = 5.dp
+    val SearchIconPadding = 6.dp
+    val SearchFieldTopPadding = 12.dp
 }

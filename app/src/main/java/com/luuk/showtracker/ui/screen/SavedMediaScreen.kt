@@ -31,7 +31,11 @@ fun SavedMediaScreen(
     val reviews by viewModel.reviews.collectAsState()
     val watchedIds by viewModel.watchedIds.collectAsState()
     val configuration = LocalConfiguration.current
-    val columnCount = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
+    val columnCount = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        SavedMediaScreenDefaults.LandscapeColumnCount
+    } else {
+        SavedMediaScreenDefaults.PortraitColumnCount
+    }
     val shownItems = savedItems.filter { item ->
         val mediaTitle = item.title ?: item.name ?: ""
         mediaTitle.contains(searchQuery, ignoreCase = true)
@@ -45,7 +49,7 @@ fun SavedMediaScreen(
             Text(
                 text = "No watchlist items yet.",
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(SavedMediaScreenDefaults.ScreenPadding)
             )
         }
     } else if (shownItems.isEmpty()) {
@@ -56,7 +60,7 @@ fun SavedMediaScreen(
             Text(
                 text = "No results found.",
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(SavedMediaScreenDefaults.ScreenPadding)
             )
         }
     } else {
@@ -64,10 +68,10 @@ fun SavedMediaScreen(
             columns = GridCells.Fixed(columnCount),
             modifier = modifier
                 .fillMaxSize()
-                .padding(horizontal = 4.dp),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = SavedMediaScreenDefaults.GridOuterPadding),
+            contentPadding = PaddingValues(SavedMediaScreenDefaults.ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing),
+            horizontalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing)
         ) {
             items(shownItems, key = { it.id }) { item ->
                 MediaItemRow(
@@ -79,4 +83,13 @@ fun SavedMediaScreen(
             }
         }
     }
+}
+
+private object SavedMediaScreenDefaults {
+    const val PortraitColumnCount = 2
+    const val LandscapeColumnCount = 3
+
+    val GridOuterPadding = 4.dp
+    val GridSpacing = 16.dp
+    val ScreenPadding = 16.dp
 }

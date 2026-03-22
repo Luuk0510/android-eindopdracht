@@ -61,9 +61,9 @@ fun TrendingMediaScreen(
     val columnCount = if (
         configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     ) {
-        3
+        TrendingMediaScreenDefaults.LandscapeColumnCount
     } else {
-        2
+        TrendingMediaScreenDefaults.PortraitColumnCount
     }
     val shownItems = if (searchQuery.isBlank()) mediaItems else searchResults
 
@@ -74,7 +74,7 @@ fun TrendingMediaScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 4.dp)
+            .padding(horizontal = TrendingMediaScreenDefaults.GridOuterPadding)
     ) {
         if (isLoading && mediaItems.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -82,12 +82,16 @@ fun TrendingMediaScreen(
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columnCount),
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(TrendingMediaScreenDefaults.GridContentPadding),
+                verticalArrangement = Arrangement.spacedBy(TrendingMediaScreenDefaults.GridSpacing),
+                horizontalArrangement = Arrangement.spacedBy(TrendingMediaScreenDefaults.GridSpacing)
             ) {
                 itemsIndexed(shownItems) { index, item ->
-                    if (searchQuery.isBlank() && index >= shownItems.size - 5 && !isLoading) {
+                    if (
+                        searchQuery.isBlank() &&
+                        index >= shownItems.size - TrendingMediaScreenDefaults.PrefetchThreshold &&
+                        !isLoading
+                    ) {
                         viewModel.loadNextPage()
                     }
 
@@ -104,10 +108,12 @@ fun TrendingMediaScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(TrendingMediaScreenDefaults.GridContentPadding),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(TrendingMediaScreenDefaults.LoadingIndicatorSize)
+                            )
                         }
                     }
                 }
@@ -118,7 +124,9 @@ fun TrendingMediaScreen(
             Text(
                 text = errorMessage!!,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(TrendingMediaScreenDefaults.GridContentPadding)
             )
         }
 
@@ -145,9 +153,11 @@ fun MediaItemRow(
             .clickable(onClick = onClick)
     ) {
         Card(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(TrendingMediaScreenDefaults.MediaCardCornerRadius),
             colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = TrendingMediaScreenDefaults.MediaCardElevation
+            )
         ) {
             Box {
                 AsyncImage(
@@ -155,35 +165,45 @@ fun MediaItemRow(
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(0.68f)
-                        .clip(RoundedCornerShape(16.dp)),
+                        .aspectRatio(TrendingMediaScreenDefaults.MediaPosterAspectRatio)
+                        .clip(RoundedCornerShape(TrendingMediaScreenDefaults.MediaCardCornerRadius)),
                     contentScale = ContentScale.Crop
                 )
 
                 if (isWatched) {
                     Surface(
-                        color = Color(0xCC121212),
-                        shape = RoundedCornerShape(bottomStart = 12.dp),
+                        color = TrendingMediaScreenDefaults.MediaOverlayColor,
+                        shape = RoundedCornerShape(
+                            bottomStart = TrendingMediaScreenDefaults.MediaBadgeCornerRadius
+                        ),
                         modifier = Modifier.align(Alignment.TopEnd)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Visibility,
                             contentDescription = "Watched",
                             tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(
+                                horizontal = TrendingMediaScreenDefaults.WatchedBadgeHorizontalPadding,
+                                vertical = TrendingMediaScreenDefaults.WatchedBadgeVerticalPadding
+                            )
                         )
                     }
                 }
 
                 if (!ratingBadge.isNullOrBlank()) {
                     Surface(
-                        color = Color(0xCC121212),
-                        shape = RoundedCornerShape(topStart = 12.dp),
+                        color = TrendingMediaScreenDefaults.MediaOverlayColor,
+                        shape = RoundedCornerShape(
+                            topStart = TrendingMediaScreenDefaults.MediaBadgeCornerRadius
+                        ),
                         modifier = Modifier.align(Alignment.BottomEnd)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(
+                                horizontal = TrendingMediaScreenDefaults.RatingBadgeHorizontalPadding,
+                                vertical = TrendingMediaScreenDefaults.RatingBadgeVerticalPadding
+                            )
                         ) {
                             Text(
                                 text = ratingBadge,
@@ -196,8 +216,8 @@ fun MediaItemRow(
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier
-                                    .padding(start = 4.dp)
-                                    .size(16.dp)
+                                    .padding(start = TrendingMediaScreenDefaults.RatingStarSpacing)
+                                    .size(TrendingMediaScreenDefaults.RatingStarSize)
                             )
                         }
                     }
@@ -212,7 +232,30 @@ fun MediaItemRow(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             color = Color.White,
-            modifier = Modifier.padding(top = 10.dp)
+            modifier = Modifier.padding(top = TrendingMediaScreenDefaults.TitleTopPadding)
         )
     }
+}
+
+private object TrendingMediaScreenDefaults {
+    const val PortraitColumnCount = 2
+    const val LandscapeColumnCount = 3
+    const val PrefetchThreshold = 5
+
+    val GridOuterPadding = 4.dp
+    val GridContentPadding = 16.dp
+    val GridSpacing = 16.dp
+    val LoadingIndicatorSize = 32.dp
+    val MediaCardCornerRadius = 16.dp
+    val MediaCardElevation = 6.dp
+    const val MediaPosterAspectRatio = 0.68f
+    val MediaBadgeCornerRadius = 12.dp
+    val WatchedBadgeHorizontalPadding = 10.dp
+    val WatchedBadgeVerticalPadding = 8.dp
+    val RatingBadgeHorizontalPadding = 10.dp
+    val RatingBadgeVerticalPadding = 6.dp
+    val RatingStarSpacing = 4.dp
+    val RatingStarSize = 16.dp
+    val TitleTopPadding = 10.dp
+    val MediaOverlayColor = Color(0xCC121212)
 }
