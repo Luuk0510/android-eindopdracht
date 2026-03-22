@@ -468,26 +468,44 @@ private fun ReviewDialogContent(
 
                 Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.DialogActionsTopSpacing))
 
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    if (currentReview != null) {
+                if (currentReview == null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Button(
+                            onClick = onSave,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text(
+                                text = "Post review",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
+                } else {
+                    Row(modifier = Modifier.fillMaxWidth()) {
                         TextButton(onClick = onDelete) {
                             Text("Delete review")
                         }
-                    }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
 
-                    Button(
-                        onClick = onSave,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text(
-                            text = "Post review",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Button(
+                            onClick = onSave,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text(
+                                text = "Update review",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
                     }
                 }
             }
