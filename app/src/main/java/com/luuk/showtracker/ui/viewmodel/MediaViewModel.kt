@@ -22,6 +22,9 @@ class MediaViewModel(private val repository: MediaRepository) : ViewModel() {
     private val _savedItems = MutableStateFlow<List<TmdbMediaItem>>(emptyList())
     val savedItems: StateFlow<List<TmdbMediaItem>> = _savedItems.asStateFlow()
 
+    private val _ratings = MutableStateFlow<Map<Int, Int>>(emptyMap())
+    val ratings: StateFlow<Map<Int, Int>> = _ratings.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -96,5 +99,17 @@ class MediaViewModel(private val repository: MediaRepository) : ViewModel() {
 
     fun isSaved(itemId: Int): Boolean {
         return _savedItems.value.any { it.id == itemId }
+    }
+
+    fun setRating(itemId: Int, rating: Int) {
+        _ratings.value = _ratings.value.toMutableMap().apply {
+            this[itemId] = rating
+        }
+    }
+
+    fun removeRating(itemId: Int) {
+        _ratings.value = _ratings.value.toMutableMap().apply {
+            remove(itemId)
+        }
     }
 }

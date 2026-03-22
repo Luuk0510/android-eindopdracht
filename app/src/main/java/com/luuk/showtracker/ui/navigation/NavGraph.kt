@@ -1,21 +1,43 @@
 package com.luuk.showtracker.ui.navigation
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocalMovies
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -40,21 +62,43 @@ fun ShowTrackerApp(
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    val isTopLevelScreen =
+        currentDestination?.route == Screen.Home.route || currentDestination?.route == Screen.Saved.route
+    var searchText by remember { mutableStateOf("") }
+    var showSearchField by remember { mutableStateOf(false) }
+
+    LaunchedEffect(currentDestination?.route) {
+        showSearchField = false
+        searchText = ""
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        topBar = {
+            if (isTopLevelScreen) {
+                ShowTrackerTopBar(
+                    searchText = searchText,
+                    showSearchField = showSearchField,
+                    onSearchTextChanged = { searchText = it },
+                    onSearchClick = {
+                        if (showSearchField) {
+                            showSearchField = false
+                            searchText = ""
+                        } else {
+                            showSearchField = true
+                        }
+                    }
+                )
+            }
+        },
         bottomBar = {
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentDestination = navBackStackEntry?.destination
-
-            if (
-                currentDestination?.route == Screen.Home.route ||
-                currentDestination?.route == Screen.Saved.route
-            ) {
+            if (isTopLevelScreen) {
                 NavigationBar {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                        label = { Text("Home") },
+                        label = { Text("Trending") },
                         selected = currentDestination.hierarchy.any { it.route == Screen.Home.route },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -97,6 +141,7 @@ fun ShowTrackerApp(
         SetupNavGraph(
             navController = navController,
             viewModel = viewModel,
+            searchText = searchText,
             modifier = Modifier.padding(innerPadding)
         )
     }
@@ -106,6 +151,7 @@ fun ShowTrackerApp(
 fun SetupNavGraph(
     navController: NavHostController,
     viewModel: MediaViewModel,
+    searchText: String,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -116,6 +162,7 @@ fun SetupNavGraph(
         composable(Screen.Home.route) {
             TrendingMediaScreen(
                 viewModel = viewModel,
+                searchQuery = searchText,
                 onItemClick = { item -> navigateToDetails(navController, item) }
             )
         }
@@ -123,6 +170,7 @@ fun SetupNavGraph(
         composable(Screen.Saved.route) {
             SavedMediaScreen(
                 viewModel = viewModel,
+                searchQuery = searchText,
                 onItemClick = { itemId ->
                     val savedItem = viewModel.savedItems.value.firstOrNull { it.id == itemId }
                     if (savedItem != null) {
@@ -142,6 +190,7 @@ fun SetupNavGraph(
             )
         ) { backStackEntry ->
             val savedItems by viewModel.savedItems.collectAsState()
+            val ratings by viewModel.ratings.collectAsState()
             val itemId = backStackEntry.arguments?.getInt("id") ?: 0
             val title = URLDecoder.decode(
                 backStackEntry.arguments?.getString("title") ?: "",
@@ -168,9 +217,83 @@ fun SetupNavGraph(
                 overview = overview,
                 posterPath = mediaItem.posterPath,
                 isSaved = savedItems.any { it.id == itemId },
+                currentRating = ratings[itemId],
+                onRatingSelected = { rating -> viewModel.setRating(itemId, rating) },
+                onRatingRemoved = { viewModel.removeRating(itemId) },
                 onSaveClick = { viewModel.toggleSaved(mediaItem) },
                 onBackClick = { navController.popBackStack() }
             )
+        }
+    }
+}
+
+@Composable
+private fun ShowTrackerTopBar(
+    searchText: String,
+    showSearchField: Boolean,
+    onSearchTextChanged: (String) -> Unit,
+    onSearchClick: () -> Unit
+) {
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(showSearchField) {
+        if (showSearchField) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
+
+    Surface(
+        color = MaterialTheme.colorScheme.background,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocalMovies,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.padding(horizontal = 5.dp))
+                Text(
+                    text = "ShowTracker",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = if (showSearchField) Icons.Default.Close else Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .clickable(onClick = onSearchClick)
+                        .padding(6.dp)
+                )
+            }
+
+            if (showSearchField) {
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = onSearchTextChanged,
+                    label = { Text("Search by name") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .focusRequester(focusRequester)
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                )
+            }
         }
     }
 }

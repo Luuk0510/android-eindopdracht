@@ -17,15 +17,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,7 +40,8 @@ import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
 fun TrendingMediaScreen(
-    viewModel: MediaViewModel, 
+    viewModel: MediaViewModel,
+    searchQuery: String,
     onItemClick: (TmdbMediaItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -52,7 +49,6 @@ fun TrendingMediaScreen(
     val searchResults by viewModel.searchResults.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    var searchText by remember { mutableStateOf("") }
     val configuration = LocalConfiguration.current
     val columnCount = if (
         configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -61,10 +57,10 @@ fun TrendingMediaScreen(
     } else {
         2
     }
-    val shownItems = if (searchText.isBlank()) mediaItems else searchResults
+    val shownItems = if (searchQuery.isBlank()) mediaItems else searchResults
 
-    LaunchedEffect(searchText) {
-        viewModel.searchMedia(searchText)
+    LaunchedEffect(searchQuery) {
+        viewModel.searchMedia(searchQuery)
     }
 
     Box(
@@ -75,45 +71,33 @@ fun TrendingMediaScreen(
         if (isLoading && mediaItems.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            Column(modifier = Modifier.fillMaxSize()) {
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },
-                    label = { Text("Search by name") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                )
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(columnCount),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    itemsIndexed(shownItems) { index, item ->
-                        if (searchText.isBlank() && index >= shownItems.size - 5 && !isLoading) {
-                            viewModel.loadNextPage()
-                        }
-                        
-                        MediaItemRow(
-                            item = item,
-                            onClick = { onItemClick(item) }
-                        )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columnCount),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                itemsIndexed(shownItems) { index, item ->
+                    if (searchQuery.isBlank() && index >= shownItems.size - 5 && !isLoading) {
+                        viewModel.loadNextPage()
                     }
 
-                    if (isLoading) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                            }
+                    MediaItemRow(
+                        item = item,
+                        onClick = { onItemClick(item) }
+                    )
+                }
+
+                if (isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(32.dp))
                         }
                     }
                 }
@@ -128,7 +112,7 @@ fun TrendingMediaScreen(
             )
         }
 
-        if (!isLoading && shownItems.isEmpty() && searchText.isNotBlank()) {
+        if (!isLoading && shownItems.isEmpty() && searchQuery.isNotBlank()) {
             Text(
                 text = "No results found.",
                 color = MaterialTheme.colorScheme.onBackground,

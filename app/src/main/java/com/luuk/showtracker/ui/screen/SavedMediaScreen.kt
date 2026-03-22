@@ -23,12 +23,17 @@ import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 @Composable
 fun SavedMediaScreen(
     viewModel: MediaViewModel,
+    searchQuery: String,
     onItemClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val savedItems by viewModel.savedItems.collectAsState()
     val configuration = LocalConfiguration.current
     val columnCount = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
+    val shownItems = savedItems.filter { item ->
+        val mediaTitle = item.title ?: item.name ?: ""
+        mediaTitle.contains(searchQuery, ignoreCase = true)
+    }
 
     if (savedItems.isEmpty()) {
         Box(
@@ -37,6 +42,17 @@ fun SavedMediaScreen(
         ) {
             Text(
                 text = "No saved media yet.",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    } else if (shownItems.isEmpty()) {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No results found.",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(16.dp)
             )
@@ -51,7 +67,7 @@ fun SavedMediaScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(savedItems, key = { it.id }) { item ->
+            items(shownItems, key = { it.id }) { item ->
                 MediaItemRow(
                     item = item,
                     onClick = { onItemClick(item.id) }
