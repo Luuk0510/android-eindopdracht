@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.ui.theme.SurfaceDark
+import com.luuk.showtracker.ui.theme.TextMuted
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
@@ -43,7 +46,11 @@ fun TrendingMediaScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 4.dp)
+    ) {
         if (isLoading && mediaItems.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
@@ -94,7 +101,8 @@ fun MediaItemRow(item: TmdbMediaItem, onClick: () -> Unit) {
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
         ) {
             AsyncImage(
                 model = "https://image.tmdb.org/t/p/w200${item.posterPath}",
@@ -113,7 +121,15 @@ fun MediaItemRow(item: TmdbMediaItem, onClick: () -> Unit) {
             fontWeight = FontWeight.Bold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp)
+            color = Color.White,
+            modifier = Modifier.padding(top = 10.dp)
+        )
+
+        Text(
+            text = if (item.title != null) "MOVIE" else "TV SHOW",
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextMuted,
+            modifier = Modifier.padding(top = 2.dp)
         )
     }
 }
