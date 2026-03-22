@@ -35,7 +35,7 @@ import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
-fun MediaListScreen(
+fun TrendingMediaScreen(
     viewModel: MediaViewModel, 
     onItemClick: (TmdbMediaItem) -> Unit,
     modifier: Modifier = Modifier

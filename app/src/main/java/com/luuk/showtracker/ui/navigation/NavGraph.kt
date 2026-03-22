@@ -25,8 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
-import com.luuk.showtracker.ui.screen.MediaListScreen
 import com.luuk.showtracker.ui.screen.SavedMoviesScreen
+import com.luuk.showtracker.ui.screen.TrendingMediaScreen
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -102,7 +102,7 @@ fun SetupNavGraph(
         modifier = modifier
     ) {
         composable(Screen.Home.route) {
-            MediaListScreen(
+            TrendingMediaScreen(
                 viewModel = viewModel,
                 onItemClick = { item -> navigateToDetails(navController, item) }
             )
