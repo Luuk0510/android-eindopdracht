@@ -14,6 +14,9 @@ class MediaViewModel(private val repository: MediaRepository) : ViewModel() {
     private val _mediaItems = MutableStateFlow<List<TmdbMediaItem>>(emptyList())
     val mediaItems: StateFlow<List<TmdbMediaItem>> = _mediaItems.asStateFlow()
 
+    private val _savedItems = MutableStateFlow<List<TmdbMediaItem>>(emptyList())
+    val savedItems: StateFlow<List<TmdbMediaItem>> = _savedItems.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -47,5 +50,20 @@ class MediaViewModel(private val repository: MediaRepository) : ViewModel() {
                 }
             _isLoading.value = false
         }
+    }
+
+    fun toggleSaved(item: TmdbMediaItem) {
+        val currentSavedItems = _savedItems.value
+        val isAlreadySaved = currentSavedItems.any { it.id == item.id }
+
+        _savedItems.value = if (isAlreadySaved) {
+            currentSavedItems.filterNot { it.id == item.id }
+        } else {
+            listOf(item) + currentSavedItems
+        }
+    }
+
+    fun isSaved(itemId: Int): Boolean {
+        return _savedItems.value.any { it.id == itemId }
     }
 }

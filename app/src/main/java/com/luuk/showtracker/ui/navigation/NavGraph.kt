@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -22,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
 import com.luuk.showtracker.ui.screen.MediaListScreen
 import com.luuk.showtracker.ui.screen.SavedMoviesScreen
@@ -102,31 +104,33 @@ fun SetupNavGraph(
         composable(Screen.Home.route) {
             MediaListScreen(
                 viewModel = viewModel,
-                onItemClick = { item ->
-                    val title = URLEncoder.encode(
-                        item.title ?: item.name ?: "Unknown",
-                        StandardCharsets.UTF_8.toString()
-                    )
-                    val overview = URLEncoder.encode(item.overview, StandardCharsets.UTF_8.toString())
-                    val poster = URLEncoder.encode(item.posterPath ?: "", StandardCharsets.UTF_8.toString())
-                    
-                    navController.navigate(Screen.Details.createRoute(title, overview, poster))
-                }
+                onItemClick = { item -> navigateToDetails(navController, item) }
             )
         }
 
         composable(Screen.Saved.route) {
-            SavedMoviesScreen()
+            SavedMoviesScreen(
+                viewModel = viewModel,
+                onItemClick = { itemId ->
+                    val savedItem = viewModel.savedItems.value.firstOrNull { it.id == itemId }
+                    if (savedItem != null) {
+                        navigateToDetails(navController, savedItem)
+                    }
+                }
+            )
         }
 
         composable(
             route = Screen.Details.route,
             arguments = listOf(
+                navArgument("id") { type = NavType.IntType },
                 navArgument("title") { type = NavType.StringType },
                 navArgument("overview") { type = NavType.StringType },
                 navArgument("poster") { type = NavType.StringType }
             )
         ) { backStackEntry ->
+            val savedItems by viewModel.savedItems.collectAsState()
+            val itemId = backStackEntry.arguments?.getInt("id") ?: 0
             val title = URLDecoder.decode(
                 backStackEntry.arguments?.getString("title") ?: "",
                 StandardCharsets.UTF_8.toString()
@@ -139,13 +143,36 @@ fun SetupNavGraph(
                 backStackEntry.arguments?.getString("poster") ?: "",
                 StandardCharsets.UTF_8.toString()
             )
+            val mediaItem = TmdbMediaItem(
+                id = itemId,
+                title = title,
+                name = null,
+                overview = overview,
+                posterPath = poster.ifBlank { null }
+            )
 
             MediaDetailScreen(
                 title = title,
                 overview = overview,
-                posterPath = poster,
+                posterPath = mediaItem.posterPath,
+                isSaved = savedItems.any { it.id == itemId },
+                onSaveClick = { viewModel.toggleSaved(mediaItem) },
                 onBackClick = { navController.popBackStack() }
             )
         }
     }
+}
+
+private fun navigateToDetails(
+    navController: NavHostController,
+    item: TmdbMediaItem
+) {
+    val title = URLEncoder.encode(
+        item.title ?: item.name ?: "Unknown",
+        StandardCharsets.UTF_8.toString()
+    )
+    val overview = URLEncoder.encode(item.overview, StandardCharsets.UTF_8.toString())
+    val poster = URLEncoder.encode(item.posterPath ?: "", StandardCharsets.UTF_8.toString())
+
+    navController.navigate(Screen.Details.createRoute(item.id, title, overview, poster))
 }

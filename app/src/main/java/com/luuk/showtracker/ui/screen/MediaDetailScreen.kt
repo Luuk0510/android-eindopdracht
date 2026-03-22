@@ -10,6 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +31,8 @@ fun MediaDetailScreen(
     title: String,
     overview: String,
     posterPath: String?,
+    isSaved: Boolean,
+    onSaveClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     Scaffold(
@@ -38,6 +42,14 @@ fun MediaDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onSaveClick) {
+                        Icon(
+                            imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = if (isSaved) "Remove from saved" else "Save movie"
+                        )
                     }
                 }
             )
