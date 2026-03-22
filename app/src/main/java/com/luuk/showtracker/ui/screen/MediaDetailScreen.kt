@@ -54,8 +54,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.AsyncImage
 import com.luuk.showtracker.data.model.MediaReview
+import com.luuk.showtracker.ui.component.TmdbPosterImage
 import com.luuk.showtracker.ui.theme.TextMuted
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -182,8 +182,9 @@ private fun DetailHeroSection(
 @Composable
 private fun DetailPosterBackground(posterPath: String?) {
     if (!posterPath.isNullOrBlank()) {
-        AsyncImage(
-            model = "https://image.tmdb.org/t/p/w500$posterPath",
+        TmdbPosterImage(
+            posterPath = posterPath,
+            imageWidth = MediaDetailScreenDefaults.PosterImageWidth,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -617,4 +618,5 @@ private object MediaDetailScreenDefaults {
     val DialogActionsTopSpacing = 24.dp
     val ReviewTextFieldHeight = 140.dp
     val RatingStarSpacing = 4.dp
+    const val PosterImageWidth = "w500"
 }

@@ -8,7 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.luuk.showtracker.data.api.RetrofitClient
+import com.luuk.showtracker.data.api.TmdbService
 import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
 import com.luuk.showtracker.data.local.WatchedStorage
@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        val repository = MediaRepository(RetrofitClient.tmdbService)
+        val repository = MediaRepository(TmdbService(applicationContext))
         val reviewStorage = ReviewStorage(applicationContext)
         val savedMediaStorage = SavedMediaStorage(applicationContext)
         val watchedStorage = WatchedStorage(applicationContext)

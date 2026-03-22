@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import coil.compose.AsyncImage
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.ui.component.TmdbPosterImage
 import com.luuk.showtracker.ui.theme.SurfaceDark
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
@@ -232,8 +232,9 @@ fun MediaItemRow(
             )
         ) {
             Box {
-                AsyncImage(
-                    model = "https://image.tmdb.org/t/p/w200${item.posterPath}",
+                TmdbPosterImage(
+                    posterPath = item.posterPath,
+                    imageWidth = TrendingMediaScreenDefaults.PosterImageWidth,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -330,4 +331,5 @@ private object TrendingMediaScreenDefaults {
     val RatingStarSize = 16.dp
     val TitleTopPadding = 10.dp
     val MediaOverlayColor = Color(0xCC121212)
+    const val PosterImageWidth = "w200"
 }
