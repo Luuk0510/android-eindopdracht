@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -299,48 +300,57 @@ private fun DetailContentSection(
 
         Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.SectionSpacing))
 
-        Button(
-            onClick = onWriteReviewClick,
-            modifier = Modifier.height(MediaDetailScreenDefaults.ActionButtonHeight),
-            contentPadding = PaddingValues(
-                horizontal = MediaDetailScreenDefaults.ActionButtonHorizontalPadding,
-                vertical = MediaDetailScreenDefaults.ActionButtonVerticalPadding
-            )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(MediaDetailScreenDefaults.ButtonSpacing),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = if (currentReview == null) "Write a review" else "Edit review",
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
+            Button(
+                onClick = onWriteReviewClick,
+                modifier = Modifier.height(MediaDetailScreenDefaults.ActionButtonHeight),
+                contentPadding = PaddingValues(
+                    horizontal = MediaDetailScreenDefaults.ActionButtonHorizontalPadding,
+                    vertical = MediaDetailScreenDefaults.ActionButtonVerticalPadding
+                )
+            ) {
+                Text(
+                    text = if (currentReview == null) "Write a review" else "Edit review",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
 
-        Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.ButtonSpacing))
-
-        OutlinedButton(
-            onClick = onWatchedToggle,
-            modifier = Modifier.height(MediaDetailScreenDefaults.ActionButtonHeight),
-            contentPadding = PaddingValues(
-                horizontal = MediaDetailScreenDefaults.ActionButtonHorizontalPadding,
-                vertical = MediaDetailScreenDefaults.ActionButtonVerticalPadding
-            ),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = if (isWatched) {
-                    MaterialTheme.colorScheme.secondary.copy(
-                        alpha = MediaDetailScreenDefaults.WatchedButtonAlpha
-                    )
-                } else {
-                    Color.Transparent
-                },
-                contentColor = if (isWatched) {
-                    MaterialTheme.colorScheme.secondary
-                } else {
-                    Color.White
-                }
-            )
-        ) {
-            Text(
-                text = if (isWatched) "Watched" else "Mark as watched",
-                style = MaterialTheme.typography.titleMedium
-            )
+            OutlinedButton(
+                onClick = onWatchedToggle,
+                modifier = Modifier.height(MediaDetailScreenDefaults.ActionButtonHeight),
+                contentPadding = PaddingValues(
+                    horizontal = MediaDetailScreenDefaults.ActionButtonHorizontalPadding,
+                    vertical = MediaDetailScreenDefaults.ActionButtonVerticalPadding
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (isWatched) {
+                        MaterialTheme.colorScheme.secondary.copy(
+                            alpha = MediaDetailScreenDefaults.WatchedButtonAlpha
+                        )
+                    } else {
+                        Color.Transparent
+                    },
+                    contentColor = if (isWatched) {
+                        MaterialTheme.colorScheme.secondary
+                    } else {
+                        Color.White
+                    }
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Visibility,
+                    contentDescription = null,
+                    modifier = Modifier.size(MediaDetailScreenDefaults.WatchedIconSize)
+                )
+                Spacer(modifier = Modifier.width(MediaDetailScreenDefaults.WatchedIconSpacing))
+                Text(
+                    text = if (isWatched) "Watched" else "Watch",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
         }
 
         if (currentReview != null) {
@@ -592,6 +602,8 @@ private object MediaDetailScreenDefaults {
     val ActionButtonHeight = 38.dp
     val ActionButtonHorizontalPadding = 14.dp
     val ActionButtonVerticalPadding = 4.dp
+    val WatchedIconSize = 18.dp
+    val WatchedIconSpacing = 6.dp
     const val WatchedButtonAlpha = 0.18f
     val ReviewCardCornerRadius = 18.dp
     val ReviewCardPadding = 16.dp
