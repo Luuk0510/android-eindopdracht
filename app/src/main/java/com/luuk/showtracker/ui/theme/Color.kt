@@ -2,7 +2,7 @@ package com.luuk.showtracker.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val PrimaryRed = Color(0xFFE50914)
+val PrimaryRed = Color(0xFFFF5447)
 val SecondaryYellow = Color(0xFFFFC107)
 val TertiaryPurple = Color(0xFF975EC2)
 

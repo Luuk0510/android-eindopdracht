@@ -10,4 +10,10 @@ interface TmdbService {
         @Query("api_key") apiKey: String,
         @Query("page") page: Int
     ): TmdbResponse
+
+    @GET("search/multi")
+    suspend fun searchMedia(
+        @Query("api_key") apiKey: String,
+        @Query("query") query: String
+    ): TmdbResponse
 }

@@ -6,8 +6,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
-import com.luuk.showtracker.ui.screen.SavedMoviesScreen
+import com.luuk.showtracker.ui.screen.SavedMediaScreen
 import com.luuk.showtracker.ui.screen.TrendingMediaScreen
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 import java.net.URLDecoder
@@ -54,6 +56,11 @@ fun ShowTrackerApp(
                         icon = { Icon(Icons.Default.Home, contentDescription = null) },
                         label = { Text("Home") },
                         selected = currentDestination.hierarchy.any { it.route == Screen.Home.route },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                        ),
                         onClick = {
                             navController.navigate(Screen.Home.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -68,6 +75,11 @@ fun ShowTrackerApp(
                         icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
                         label = { Text("Saved") },
                         selected = currentDestination.hierarchy.any { it.route == Screen.Saved.route },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                        ),
                         onClick = {
                             navController.navigate(Screen.Saved.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -109,7 +121,7 @@ fun SetupNavGraph(
         }
 
         composable(Screen.Saved.route) {
-            SavedMoviesScreen(
+            SavedMediaScreen(
                 viewModel = viewModel,
                 onItemClick = { itemId ->
                     val savedItem = viewModel.savedItems.value.firstOrNull { it.id == itemId }
