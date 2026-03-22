@@ -5,9 +5,9 @@ package com.luuk.showtracker.ui.navigation
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Saved : Screen("saved")
-    object Details : Screen("details/{id}/{title}/{overview}/{poster}") {
-        fun createRoute(id: Int, title: String, overview: String, poster: String): String {
-            return "details/$id/$title/$overview/$poster"
+    object Details : Screen("details/{id}/{title}/{overview}/{poster}/{genres}") {
+        fun createRoute(id: Int, title: String, overview: String, poster: String, genres: String): String {
+            return "details/$id/$title/$overview/$poster/$genres"
         }
     }
 }

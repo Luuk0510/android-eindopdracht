@@ -154,12 +154,5 @@ fun MediaItemRow(item: TmdbMediaItem, onClick: () -> Unit) {
             color = Color.White,
             modifier = Modifier.padding(top = 10.dp)
         )
-
-        Text(
-            text = if (item.title != null) "MOVIE" else "TV SHOW",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextMuted,
-            modifier = Modifier.padding(top = 2.dp)
-        )
     }
 }

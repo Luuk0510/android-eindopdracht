@@ -47,6 +47,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.luuk.showtracker.data.model.MediaReview
+import com.luuk.showtracker.data.model.genreNames
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
 import com.luuk.showtracker.ui.screen.SavedMediaScreen
@@ -186,11 +188,12 @@ fun SetupNavGraph(
                 navArgument("id") { type = NavType.IntType },
                 navArgument("title") { type = NavType.StringType },
                 navArgument("overview") { type = NavType.StringType },
-                navArgument("poster") { type = NavType.StringType }
+                navArgument("poster") { type = NavType.StringType },
+                navArgument("genres") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val savedItems by viewModel.savedItems.collectAsState()
-            val ratings by viewModel.ratings.collectAsState()
+            val reviews by viewModel.reviews.collectAsState()
             val itemId = backStackEntry.arguments?.getInt("id") ?: 0
             val title = URLDecoder.decode(
                 backStackEntry.arguments?.getString("title") ?: "",
@@ -202,6 +205,10 @@ fun SetupNavGraph(
             )
             val poster = URLDecoder.decode(
                 backStackEntry.arguments?.getString("poster") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            val genres = URLDecoder.decode(
+                backStackEntry.arguments?.getString("genres") ?: "",
                 StandardCharsets.UTF_8.toString()
             )
             val mediaItem = TmdbMediaItem(
@@ -216,10 +223,13 @@ fun SetupNavGraph(
                 title = title,
                 overview = overview,
                 posterPath = mediaItem.posterPath,
+                genreNames = genres.split("|").filter { it.isNotBlank() },
                 isSaved = savedItems.any { it.id == itemId },
-                currentRating = ratings[itemId],
-                onRatingSelected = { rating -> viewModel.setRating(itemId, rating) },
-                onRatingRemoved = { viewModel.removeRating(itemId) },
+                currentReview = reviews[itemId],
+                onReviewSaved = { reviewTitle, reviewText, rating ->
+                    viewModel.saveReview(itemId, reviewTitle, reviewText, rating)
+                },
+                onReviewDeleted = { viewModel.deleteReview(itemId) },
                 onSaveClick = { viewModel.toggleSaved(mediaItem) },
                 onBackClick = { navController.popBackStack() }
             )
@@ -308,6 +318,7 @@ private fun navigateToDetails(
     )
     val overview = URLEncoder.encode(item.overview, StandardCharsets.UTF_8.toString())
     val poster = URLEncoder.encode(item.posterPath ?: "", StandardCharsets.UTF_8.toString())
+    val genres = URLEncoder.encode(item.genreNames().joinToString("|"), StandardCharsets.UTF_8.toString())
 
-    navController.navigate(Screen.Details.createRoute(item.id, title, overview, poster))
+    navController.navigate(Screen.Details.createRoute(item.id, title, overview, poster, genres))
 }

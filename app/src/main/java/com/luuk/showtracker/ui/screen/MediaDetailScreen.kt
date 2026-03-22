@@ -2,11 +2,14 @@ package com.luuk.showtracker.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -28,9 +32,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -48,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
+import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.ui.theme.TextMuted
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,15 +62,18 @@ fun MediaDetailScreen(
     title: String,
     overview: String,
     posterPath: String?,
+    genreNames: List<String>,
     isSaved: Boolean,
-    currentRating: Int?,
-    onRatingSelected: (Int) -> Unit,
-    onRatingRemoved: () -> Unit,
+    currentReview: MediaReview?,
+    onReviewSaved: (String, String, Int) -> Unit,
+    onReviewDeleted: () -> Unit,
     onSaveClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
-    var showRatingDialog by remember { mutableStateOf(false) }
-    var selectedRating by remember(currentRating) { mutableIntStateOf(currentRating ?: 0) }
+    var showReviewDialog by remember { mutableStateOf(false) }
+    var reviewTitle by remember(currentReview) { mutableStateOf(currentReview?.title ?: "") }
+    var reviewText by remember(currentReview) { mutableStateOf(currentReview?.reviewText ?: "") }
+    var selectedRating by remember(currentReview) { mutableIntStateOf(currentReview?.rating ?: 0) }
 
     Column(
         modifier = Modifier
@@ -115,7 +124,7 @@ fun MediaDetailScreen(
                     modifier = Modifier.align(Alignment.TopStart)
                 ) {
                     Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = Color.White
                     )
@@ -136,7 +145,7 @@ fun MediaDetailScreen(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(horizontal = 20.dp, vertical = 24.dp)
+                    .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 8.dp)
             ) {
                 Text(
                     text = title,
@@ -144,6 +153,28 @@ fun MediaDetailScreen(
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White
                 )
+
+                if (genreNames.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState())
+                    ) {
+                        genreNames.forEach { genreName ->
+                            Text(
+                                text = genreName,
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier
+                                    .padding(end = 8.dp, bottom = 2.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        shape = RoundedCornerShape(999.dp)
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -160,42 +191,86 @@ fun MediaDetailScreen(
                 color = TextMuted
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { showRatingDialog = true },
-                modifier = Modifier.fillMaxWidth()
+                onClick = { showReviewDialog = true },
+                modifier = Modifier.height(38.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
             ) {
-                if (currentRating != null) {
-                    Text(
-                        text = "${currentRating}/10",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Give a rating",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = if (currentReview == null) "Write a review" else "Edit review",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            if (currentReview != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Surface(
+                    shape = RoundedCornerShape(18.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = currentReview.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "${currentReview.rating}/10",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = currentReview.dateTime,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextMuted
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = currentReview.reviewText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        TextButton(onClick = onReviewDeleted) {
+                            Text("Delete review")
+                        }
+                    }
                 }
             }
         }
     }
 
-    if (showRatingDialog) {
+    if (showReviewDialog) {
         Dialog(
-            onDismissRequest = { showRatingDialog = false },
+            onDismissRequest = { showReviewDialog = false },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Surface(
@@ -211,12 +286,12 @@ fun MediaDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Choose a rating",
+                            text = if (currentReview == null) "Write a review" else "Edit review",
                             style = MaterialTheme.typography.headlineSmall,
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.weight(1f))
-                        IconButton(onClick = { showRatingDialog = false }) {
+                        IconButton(onClick = { showReviewDialog = false }) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
                                 contentDescription = "Close",
@@ -225,7 +300,26 @@ fun MediaDetailScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = reviewTitle,
+                        onValueChange = { reviewTitle = it },
+                        label = { Text("Review title") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = reviewText,
+                        onValueChange = { reviewText = it },
+                        label = { Text("Write your review") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
                         text = if (selectedRating > 0) "$selectedRating / 10 stars" else "Tap a star",
@@ -235,14 +329,20 @@ fun MediaDetailScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                        val spacing = 4.dp
-                        val starSize = (maxWidth - (spacing * 9)) / 10
-
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            for (rating in 1..10) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        for (rating in 1..10) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                                    .clickable { selectedRating = rating },
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Icon(
                                     imageVector = Icons.Filled.Star,
                                     contentDescription = "Rate $rating",
@@ -251,72 +351,47 @@ fun MediaDetailScreen(
                                     } else {
                                         Color.Gray
                                     },
-                                    modifier = Modifier
-                                        .size(starSize)
-                                        .clickable { selectedRating = rating }
+                                    modifier = Modifier.fillMaxSize()
                                 )
-                                if (rating < 10) {
-                                    Spacer(modifier = Modifier.width(spacing))
-                                }
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    if (currentRating != null) {
-                        Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        if (currentReview != null) {
                             TextButton(
                                 onClick = {
-                                    onRatingRemoved()
+                                    onReviewDeleted()
+                                    reviewTitle = ""
+                                    reviewText = ""
                                     selectedRating = 0
-                                    showRatingDialog = false
+                                    showReviewDialog = false
                                 }
                             ) {
-                                Text("Remove rating")
+                                Text("Delete review")
                             }
+                        }
 
-                            Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
 
-                            Button(
-                                onClick = {
-                                    if (selectedRating > 0) {
-                                        onRatingSelected(selectedRating)
-                                    }
-                                    showRatingDialog = false
-                                },
+                        Button(
+                            onClick = {
+                                if (reviewTitle.isNotBlank() && reviewText.isNotBlank() && selectedRating > 0) {
+                                    onReviewSaved(reviewTitle.trim(), reviewText.trim(), selectedRating)
+                                    showReviewDialog = false
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.White
                             )
                         ) {
                             Text(
-                                text = "Save",
+                                text = "Post review",
                                 style = MaterialTheme.typography.titleMedium
                             )
-                        }
-                    }
-                } else {
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Spacer(modifier = Modifier.weight(1f))
-                            Button(
-                                onClick = {
-                                    if (selectedRating > 0) {
-                                        onRatingSelected(selectedRating)
-                                    }
-                                    showRatingDialog = false
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Text(
-                                    text = "Save",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
-                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }

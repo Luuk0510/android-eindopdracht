@@ -9,6 +9,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luuk.showtracker.data.api.RetrofitClient
+import com.luuk.showtracker.data.local.ReviewStorage
+import com.luuk.showtracker.data.local.SavedMediaStorage
 import com.luuk.showtracker.data.repository.MediaRepository
 import com.luuk.showtracker.ui.navigation.ShowTrackerApp
 import com.luuk.showtracker.ui.theme.ShowTrackerTheme
@@ -19,11 +21,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         val repository = MediaRepository(RetrofitClient.tmdbService)
+        val reviewStorage = ReviewStorage(applicationContext)
+        val savedMediaStorage = SavedMediaStorage(applicationContext)
         val viewModelFactory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(MediaViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
-                    return MediaViewModel(repository) as T
+                    return MediaViewModel(repository, reviewStorage, savedMediaStorage) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel class")
             }

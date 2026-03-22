@@ -2,6 +2,9 @@ package com.luuk.showtracker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.luuk.showtracker.data.local.ReviewStorage
+import com.luuk.showtracker.data.local.SavedMediaStorage
+import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.repository.MediaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,8 +13,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-class MediaViewModel(private val repository: MediaRepository) : ViewModel() {
+class MediaViewModel(
+    private val repository: MediaRepository,
+    private val reviewStorage: ReviewStorage,
+    private val savedMediaStorage: SavedMediaStorage
+) : ViewModel() {
 
     private val _mediaItems = MutableStateFlow<List<TmdbMediaItem>>(emptyList())
     val mediaItems: StateFlow<List<TmdbMediaItem>> = _mediaItems.asStateFlow()
@@ -19,11 +28,11 @@ class MediaViewModel(private val repository: MediaRepository) : ViewModel() {
     private val _searchResults = MutableStateFlow<List<TmdbMediaItem>>(emptyList())
     val searchResults: StateFlow<List<TmdbMediaItem>> = _searchResults.asStateFlow()
 
-    private val _savedItems = MutableStateFlow<List<TmdbMediaItem>>(emptyList())
+    private val _savedItems = MutableStateFlow(savedMediaStorage.loadSavedMedia())
     val savedItems: StateFlow<List<TmdbMediaItem>> = _savedItems.asStateFlow()
 
-    private val _ratings = MutableStateFlow<Map<Int, Int>>(emptyMap())
-    val ratings: StateFlow<Map<Int, Int>> = _ratings.asStateFlow()
+    private val _reviews = MutableStateFlow<Map<Int, MediaReview>>(reviewStorage.loadReviews())
+    val reviews: StateFlow<Map<Int, MediaReview>> = _reviews.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -95,21 +104,36 @@ class MediaViewModel(private val repository: MediaRepository) : ViewModel() {
         } else {
             listOf(item) + currentSavedItems
         }
+        savedMediaStorage.saveSavedMedia(_savedItems.value)
     }
 
     fun isSaved(itemId: Int): Boolean {
         return _savedItems.value.any { it.id == itemId }
     }
 
-    fun setRating(itemId: Int, rating: Int) {
-        _ratings.value = _ratings.value.toMutableMap().apply {
-            this[itemId] = rating
+    fun saveReview(
+        itemId: Int,
+        title: String,
+        reviewText: String,
+        rating: Int
+    ) {
+        val review = MediaReview(
+            mediaId = itemId,
+            title = title,
+            reviewText = reviewText,
+            rating = rating,
+            dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
+        )
+        _reviews.value = _reviews.value.toMutableMap().apply {
+            this[itemId] = review
         }
+        reviewStorage.saveReviews(_reviews.value)
     }
 
-    fun removeRating(itemId: Int) {
-        _ratings.value = _ratings.value.toMutableMap().apply {
+    fun deleteReview(itemId: Int) {
+        _reviews.value = _reviews.value.toMutableMap().apply {
             remove(itemId)
         }
+        reviewStorage.saveReviews(_reviews.value)
     }
 }

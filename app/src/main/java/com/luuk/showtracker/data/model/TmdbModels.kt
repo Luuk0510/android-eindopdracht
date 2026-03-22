@@ -10,7 +10,11 @@ data class TmdbMediaItem(
     val id: Int,
     val title: String?, // Used by Movies
     val name: String?,  // Used by TV Series
+    @SerializedName("media_type")
+    val mediaType: String? = null,
     val overview: String,
+    @SerializedName("genre_ids")
+    val genreIds: List<Int> = emptyList(),
     @SerializedName("poster_path")
     val posterPath: String?
 )
