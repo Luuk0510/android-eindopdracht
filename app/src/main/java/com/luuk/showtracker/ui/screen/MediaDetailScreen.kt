@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.luuk.showtracker.data.model.MediaReview
+import com.luuk.showtracker.ui.component.ProfileAvatar
 import com.luuk.showtracker.ui.component.TmdbPosterImage
 import com.luuk.showtracker.ui.theme.TextMuted
 
@@ -67,6 +68,8 @@ fun MediaDetailScreen(
     genreNames: List<String>,
     isSaved: Boolean,
     isWatched: Boolean,
+    profileName: String,
+    profilePhotoUri: String?,
     currentReview: MediaReview?,
     onReviewSaved: (String, String, Int) -> Unit,
     onReviewDeleted: () -> Unit,
@@ -95,6 +98,8 @@ fun MediaDetailScreen(
 
         DetailContentSection(
             overview = overview,
+            profileName = profileName,
+            profilePhotoUri = profilePhotoUri,
             currentReview = currentReview,
             isWatched = isWatched,
             onWriteReviewClick = { showReviewDialog = true },
@@ -281,6 +286,8 @@ private fun GenreChip(genreName: String) {
 @Composable
 private fun DetailContentSection(
     overview: String,
+    profileName: String,
+    profilePhotoUri: String?,
     currentReview: MediaReview?,
     isWatched: Boolean,
     onWriteReviewClick: () -> Unit,
@@ -356,13 +363,21 @@ private fun DetailContentSection(
 
         if (currentReview != null) {
             Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.SectionSpacing))
-            ReviewCard(currentReview)
+            ReviewCard(
+                review = currentReview,
+                profileName = profileName,
+                profilePhotoUri = profilePhotoUri
+            )
         }
     }
 }
 
 @Composable
-private fun ReviewCard(review: MediaReview) {
+private fun ReviewCard(
+    review: MediaReview,
+    profileName: String,
+    profilePhotoUri: String?
+) {
     Surface(
         shape = RoundedCornerShape(MediaDetailScreenDefaults.ReviewCardCornerRadius),
         color = MaterialTheme.colorScheme.surface
@@ -372,32 +387,32 @@ private fun ReviewCard(review: MediaReview) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = review.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    modifier = Modifier.weight(1f)
+                ProfileAvatar(
+                    name = profileName,
+                    photoUri = profilePhotoUri,
+                    modifier = Modifier.size(MediaDetailScreenDefaults.ReviewAvatarSize)
                 )
-                Text(
-                    text = "${review.rating}/10",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.width(MediaDetailScreenDefaults.RatingStarSpacing))
-                Icon(
-                    imageVector = Icons.Filled.Star,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(MediaDetailScreenDefaults.ReviewRatingStarSize)
-                )
+                Spacer(modifier = Modifier.width(MediaDetailScreenDefaults.ReviewHeaderSpacing))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = profileName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White
+                    )
+                    Text(
+                        text = review.dateTime,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextMuted
+                    )
+                }
+                ReviewRatingText(rating = review.rating)
             }
 
-            Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.ReviewDateSpacing))
-
             Text(
-                text = review.dateTime,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextMuted
+                text = review.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                modifier = Modifier.padding(top = MediaDetailScreenDefaults.ReviewTitleTopPadding)
             )
 
             Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.ReviewTextSpacing))
@@ -408,6 +423,24 @@ private fun ReviewCard(review: MediaReview) {
                 color = Color.White
             )
         }
+    }
+}
+
+@Composable
+private fun ReviewRatingText(rating: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = "$rating/10",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.secondary
+        )
+        Spacer(modifier = Modifier.width(MediaDetailScreenDefaults.RatingStarSpacing))
+        Icon(
+            imageVector = Icons.Filled.Star,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.size(MediaDetailScreenDefaults.ReviewRatingStarSize)
+        )
     }
 }
 
@@ -608,8 +641,10 @@ private object MediaDetailScreenDefaults {
     const val WatchedButtonAlpha = 0.18f
     val ReviewCardCornerRadius = 18.dp
     val ReviewCardPadding = 16.dp
+    val ReviewAvatarSize = 42.dp
+    val ReviewHeaderSpacing = 12.dp
+    val ReviewTitleTopPadding = 12.dp
     val ReviewRatingStarSize = 22.dp
-    val ReviewDateSpacing = 6.dp
     val ReviewTextSpacing = 12.dp
     val DialogOuterPadding = 20.dp
     val DialogInnerPadding = 24.dp

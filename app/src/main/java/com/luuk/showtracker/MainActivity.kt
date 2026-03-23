@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luuk.showtracker.data.api.TmdbService
+import com.luuk.showtracker.data.local.ProfileStorage
 import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
 import com.luuk.showtracker.data.local.WatchedStorage
@@ -22,6 +23,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         val repository = MediaRepository(TmdbService(applicationContext))
+        val profileStorage = ProfileStorage(applicationContext)
         val reviewStorage = ReviewStorage(applicationContext)
         val savedMediaStorage = SavedMediaStorage(applicationContext)
         val watchedStorage = WatchedStorage(applicationContext)
@@ -31,6 +33,7 @@ class MainActivity : ComponentActivity() {
                     @Suppress("UNCHECKED_CAST")
                     return MediaViewModel(
                         repository,
+                        profileStorage,
                         reviewStorage,
                         savedMediaStorage,
                         watchedStorage

@@ -1,5 +1,9 @@
 package com.luuk.showtracker.ui.navigation
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Close
@@ -21,9 +27,11 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,9 +44,13 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -50,10 +62,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.luuk.showtracker.data.model.genreNames
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.ui.component.ProfileAvatar
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
 import com.luuk.showtracker.ui.screen.SavedMediaScreen
 import com.luuk.showtracker.ui.screen.TrendingMediaScreen
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
+import java.io.File
+import java.io.FileOutputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -63,6 +78,8 @@ fun ShowTrackerApp(
     viewModel: MediaViewModel,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val profile by viewModel.profile.collectAsState()
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -70,6 +87,39 @@ fun ShowTrackerApp(
         currentDestination?.route == Screen.Home.route || currentDestination?.route == Screen.Saved.route
     var searchText by remember { mutableStateOf("") }
     var showSearchField by remember { mutableStateOf(false) }
+    var showProfileDialog by remember { mutableStateOf(false) }
+    var profileName by remember(profile.name) { mutableStateOf(profile.name) }
+    var profilePhotoUri by remember(profile.photoUri) { mutableStateOf(profile.photoUri) }
+
+    val cameraPreviewLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            profilePhotoUri = saveProfilePhoto(context, bitmap)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            cameraPreviewLauncher.launch(null)
+        }
+    }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+            profilePhotoUri = uri.toString()
+        }
+    }
 
     LaunchedEffect(currentDestination?.route) {
         showSearchField = false
@@ -81,9 +131,16 @@ fun ShowTrackerApp(
         topBar = {
             if (isTopLevelScreen) {
                 ShowTrackerTopBar(
+                    profileName = profile.name,
+                    profilePhotoUri = profile.photoUri,
                     searchText = searchText,
                     showSearchField = showSearchField,
                     onSearchTextChanged = { searchText = it },
+                    onProfileClick = {
+                        profileName = profile.name
+                        profilePhotoUri = profile.photoUri
+                        showProfileDialog = true
+                    },
                     onSearchClick = {
                         if (showSearchField) {
                             showSearchField = false
@@ -162,6 +219,34 @@ fun ShowTrackerApp(
             searchText = searchText,
             modifier = Modifier.padding(innerPadding)
         )
+
+        if (showProfileDialog) {
+            ProfileDialog(
+                profileName = profileName,
+                profilePhotoUri = profilePhotoUri,
+                onProfileNameChange = { profileName = it },
+                onChoosePhotoClick = {
+                    imagePickerLauncher.launch(arrayOf("image/*"))
+                },
+                onTakePhotoClick = {
+                    val hasCameraPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.CAMERA
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    if (hasCameraPermission) {
+                        cameraPreviewLauncher.launch(null)
+                    } else {
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                },
+                onDismiss = { showProfileDialog = false },
+                onSave = {
+                    viewModel.saveProfile(profileName.trim(), profilePhotoUri)
+                    showProfileDialog = false
+                }
+            )
+        }
     }
 }
 
@@ -209,6 +294,7 @@ fun SetupNavGraph(
             )
         ) { backStackEntry ->
             val savedItems by viewModel.savedItems.collectAsState()
+            val profile by viewModel.profile.collectAsState()
             val reviews by viewModel.reviews.collectAsState()
             val watchedIds by viewModel.watchedIds.collectAsState()
             val itemId = backStackEntry.arguments?.getInt("id") ?: 0
@@ -243,6 +329,8 @@ fun SetupNavGraph(
                 genreNames = genres.split("|").filter { it.isNotBlank() },
                 isSaved = savedItems.any { it.id == itemId },
                 isWatched = watchedIds.contains(itemId),
+                profileName = profile.name,
+                profilePhotoUri = profile.photoUri,
                 currentReview = reviews[itemId],
                 onReviewSaved = { reviewTitle, reviewText, rating ->
                     viewModel.saveReview(itemId, reviewTitle, reviewText, rating)
@@ -258,9 +346,12 @@ fun SetupNavGraph(
 
 @Composable
 private fun ShowTrackerTopBar(
+    profileName: String,
+    profilePhotoUri: String?,
     searchText: String,
     showSearchField: Boolean,
     onSearchTextChanged: (String) -> Unit,
+    onProfileClick: () -> Unit,
     onSearchClick: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -305,6 +396,14 @@ private fun ShowTrackerTopBar(
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.weight(1f))
+                ProfileAvatar(
+                    name = profileName,
+                    photoUri = profilePhotoUri,
+                    modifier = Modifier
+                        .clickable(onClick = onProfileClick)
+                        .padding(end = NavGraphDefaults.ProfileSpacing)
+                        .size(NavGraphDefaults.ProfileAvatarSize)
+                )
                 Icon(
                     imageVector = if (showSearchField) Icons.Default.Close else Icons.Default.Search,
                     contentDescription = "Search",
@@ -347,8 +446,111 @@ private fun navigateToDetails(
     navController.navigate(Screen.Details.createRoute(item.id, title, overview, poster, genres))
 }
 
+private fun saveProfilePhoto(
+    context: android.content.Context,
+    bitmap: Bitmap
+): String? {
+    return runCatching {
+        val photoFile = File(context.filesDir, NavGraphDefaults.ProfilePhotoFileName)
+        FileOutputStream(photoFile).use { outputStream ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, NavGraphDefaults.ProfilePhotoQuality, outputStream)
+        }
+        Uri.fromFile(photoFile).toString()
+    }.getOrNull()
+}
+
+@Composable
+private fun ProfileDialog(
+    profileName: String,
+    profilePhotoUri: String?,
+    onProfileNameChange: (String) -> Unit,
+    onChoosePhotoClick: () -> Unit,
+    onTakePhotoClick: () -> Unit,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = NavGraphDefaults.ProfileDialogOuterPadding),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(modifier = Modifier.padding(NavGraphDefaults.ProfileDialogInnerPadding)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Edit profile",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                        modifier = Modifier.clickable(onClick = onDismiss)
+                    )
+                }
+
+                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
+
+                ProfileAvatar(
+                    name = profileName,
+                    photoUri = profilePhotoUri,
+                    modifier = Modifier.size(NavGraphDefaults.ProfileDialogAvatarSize)
+                )
+
+                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
+
+                Button(onClick = onChoosePhotoClick) {
+                    Text("Choose profile photo")
+                }
+
+                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
+
+                Button(onClick = onTakePhotoClick) {
+                    Text("Take profile photo")
+                }
+
+                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
+
+                OutlinedTextField(
+                    value = profileName,
+                    onValueChange = onProfileNameChange,
+                    label = { Text("Profile name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogActionsSpacing))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Button(onClick = onSave) {
+                        Text("Save profile")
+                    }
+                }
+            }
+        }
+    }
+}
+
 private object NavGraphDefaults {
     const val SelectedItemIndicatorAlpha = 0.16f
+    const val ProfilePhotoFileName = "profile_photo.jpg"
+    const val ProfilePhotoQuality = 92
 
     val NavigationIconSize = 28.dp
     val TopBarIconSize = 28.dp
@@ -357,4 +559,11 @@ private object NavGraphDefaults {
     val TopBarTitleSpacing = 5.dp
     val SearchIconPadding = 6.dp
     val SearchFieldTopPadding = 12.dp
+    val ProfileAvatarSize = 34.dp
+    val ProfileSpacing = 10.dp
+    val ProfileDialogOuterPadding = 20.dp
+    val ProfileDialogInnerPadding = 24.dp
+    val ProfileDialogAvatarSize = 76.dp
+    val ProfileDialogSpacing = 12.dp
+    val ProfileDialogActionsSpacing = 20.dp
 }

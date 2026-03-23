@@ -2,11 +2,13 @@ package com.luuk.showtracker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.luuk.showtracker.data.local.ProfileStorage
 import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
 import com.luuk.showtracker.data.local.WatchedStorage
 import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.data.model.UserProfile
 import com.luuk.showtracker.data.repository.MediaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +21,7 @@ import java.time.format.DateTimeFormatter
 
 class MediaViewModel(
     private val repository: MediaRepository,
+    private val profileStorage: ProfileStorage,
     private val reviewStorage: ReviewStorage,
     private val savedMediaStorage: SavedMediaStorage,
     private val watchedStorage: WatchedStorage
@@ -32,6 +35,9 @@ class MediaViewModel(
 
     private val _savedItems = MutableStateFlow(savedMediaStorage.loadSavedMedia())
     val savedItems: StateFlow<List<TmdbMediaItem>> = _savedItems.asStateFlow()
+
+    private val _profile = MutableStateFlow(profileStorage.loadProfile())
+    val profile: StateFlow<UserProfile> = _profile.asStateFlow()
 
     private val _reviews = MutableStateFlow<Map<Int, MediaReview>>(reviewStorage.loadReviews())
     val reviews: StateFlow<Map<Int, MediaReview>> = _reviews.asStateFlow()
@@ -116,6 +122,15 @@ class MediaViewModel(
         return _savedItems.value.any { it.id == itemId }
     }
 
+    fun saveProfile(name: String, photoUri: String?) {
+        val updatedProfile = UserProfile(
+            name = name.ifBlank { MediaViewModelDefaults.DefaultProfileName },
+            photoUri = photoUri
+        )
+        _profile.value = updatedProfile
+        profileStorage.saveProfile(updatedProfile)
+    }
+
     fun toggleWatched(itemId: Int) {
         _watchedIds.value = _watchedIds.value.toMutableSet().apply {
             if (contains(itemId)) remove(itemId) else add(itemId)
@@ -148,4 +163,8 @@ class MediaViewModel(
         }
         reviewStorage.saveReviews(_reviews.value)
     }
+}
+
+private object MediaViewModelDefaults {
+    const val DefaultProfileName = "Guest"
 }
