@@ -7,7 +7,9 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.model.TmdbResponse
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URLEncoder
@@ -22,7 +24,7 @@ class TmdbService(context: Context) {
         apiKey: String,
         page: Int
     ): TmdbResponse {
-        val url = "${TmdbServiceDefaults.BaseUrl}trending/all/day?api_key=$apiKey&page=$page"
+        val url = "${TmdbServiceDefaults.BASEURL}trending/all/day?api_key=$apiKey&page=$page"
         return fetchResponse(url)
     }
 
@@ -31,25 +33,28 @@ class TmdbService(context: Context) {
         query: String
     ): TmdbResponse {
         val encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
-        val url = "${TmdbServiceDefaults.BaseUrl}search/multi?api_key=$apiKey&query=$encodedQuery"
+        val url = "${TmdbServiceDefaults.BASEURL}search/multi?api_key=$apiKey&query=$encodedQuery"
         return fetchResponse(url)
     }
 
     private suspend fun fetchResponse(url: String): TmdbResponse =
-        suspendCancellableCoroutine { continuation ->
-            val request = JsonObjectRequest(
-                Request.Method.GET,
-                url,
-                null,
-                { response ->
-                    continuation.resume(parseResponse(response))
-                },
-                { error ->
-                    continuation.resumeWithException(error)
-                }
-            )
-            request.setShouldCache(true)
-            requestQueue.add(request)
+        withContext(Dispatchers.IO) {
+            suspendCancellableCoroutine { continuation ->
+                val request = JsonObjectRequest(
+                    Request.Method.GET,
+                    url,
+                    null,
+                    { response ->
+                        continuation.resume(parseResponse(response))
+                    },
+                    { error ->
+                        continuation.resumeWithException(error)
+                    }
+                )
+                request.setShouldCache(true)
+                continuation.invokeOnCancellation { request.cancel() }
+                requestQueue.add(request)
+            }
         }
 
     private fun parseResponse(response: JSONObject): TmdbResponse {
@@ -92,5 +97,5 @@ private fun String.nullIfBlank(): String? {
 }
 
 private object TmdbServiceDefaults {
-    const val BaseUrl = "https://api.themoviedb.org/3/"
+    const val BASEURL = "https://api.themoviedb.org/3/"
 }

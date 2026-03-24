@@ -61,9 +61,9 @@ fun TrendingMediaScreen(
     val columnCount = if (
         configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     ) {
-        TrendingMediaScreenDefaults.LandscapeColumnCount
+        TrendingMediaScreenDefaults.LANDSCAPE_COLUMN_COUNT
     } else {
-        TrendingMediaScreenDefaults.PortraitColumnCount
+        TrendingMediaScreenDefaults.PORTRAIT_COLUMN_COUNT
     }
     val shownItems = if (searchQuery.isBlank()) mediaItems else searchResults
 
@@ -157,7 +157,7 @@ private fun TrendingMediaGrid(
         itemsIndexed(shownItems) { index, item ->
             if (
                 searchQuery.isBlank() &&
-                index >= shownItems.size - TrendingMediaScreenDefaults.PrefetchThreshold &&
+                index >= shownItems.size - TrendingMediaScreenDefaults.PREFETCH_THRESHOLD &&
                 !isLoading
             ) {
                 onLoadNextPage()
@@ -234,11 +234,11 @@ fun MediaItemRow(
             Box {
                 TmdbPosterImage(
                     posterPath = item.posterPath,
-                    imageWidth = TrendingMediaScreenDefaults.PosterImageWidth,
+                    imageWidth = TrendingMediaScreenDefaults.POSTER_IMAGE_WIDTH,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(TrendingMediaScreenDefaults.MediaPosterAspectRatio)
+                        .aspectRatio(TrendingMediaScreenDefaults.MEDIA_POSTER_ASPECT_RATIO)
                         .clip(RoundedCornerShape(TrendingMediaScreenDefaults.MediaCardCornerRadius)),
                     contentScale = ContentScale.Crop
                 )
@@ -311,9 +311,9 @@ fun MediaItemRow(
 }
 
 private object TrendingMediaScreenDefaults {
-    const val PortraitColumnCount = 2
-    const val LandscapeColumnCount = 3
-    const val PrefetchThreshold = 5
+    const val PORTRAIT_COLUMN_COUNT = 2
+    const val LANDSCAPE_COLUMN_COUNT = 3
+    const val PREFETCH_THRESHOLD = 5
 
     val GridOuterPadding = 4.dp
     val GridContentPadding = 16.dp
@@ -321,7 +321,7 @@ private object TrendingMediaScreenDefaults {
     val LoadingIndicatorSize = 32.dp
     val MediaCardCornerRadius = 16.dp
     val MediaCardElevation = 6.dp
-    const val MediaPosterAspectRatio = 0.68f
+    const val MEDIA_POSTER_ASPECT_RATIO = 0.68f
     val MediaBadgeCornerRadius = 12.dp
     val WatchedBadgeHorizontalPadding = 10.dp
     val WatchedBadgeVerticalPadding = 8.dp
@@ -331,5 +331,5 @@ private object TrendingMediaScreenDefaults {
     val RatingStarSize = 16.dp
     val TitleTopPadding = 10.dp
     val MediaOverlayColor = Color(0xCC121212)
-    const val PosterImageWidth = "w200"
+    const val POSTER_IMAGE_WIDTH = "w200"
 }

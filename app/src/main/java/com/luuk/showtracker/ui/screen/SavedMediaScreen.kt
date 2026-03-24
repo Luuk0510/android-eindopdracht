@@ -33,9 +33,9 @@ fun SavedMediaScreen(
     val watchedIds by viewModel.watchedIds.collectAsState()
     val configuration = LocalConfiguration.current
     val columnCount = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-        SavedMediaScreenDefaults.LandscapeColumnCount
+        SavedMediaScreenDefaults.LANDSCAPE_COLUMN_COUNT
     } else {
-        SavedMediaScreenDefaults.PortraitColumnCount
+        SavedMediaScreenDefaults.PORTRAIT_COLUMN_COUNT
     }
     val shownItems = savedItems.filter { item ->
         val mediaTitle = item.title ?: item.name ?: ""
@@ -138,8 +138,8 @@ private fun WatchlistGrid(
 }
 
 private object SavedMediaScreenDefaults {
-    const val PortraitColumnCount = 2
-    const val LandscapeColumnCount = 3
+    const val PORTRAIT_COLUMN_COUNT = 2
+    const val LANDSCAPE_COLUMN_COUNT = 3
 
     val GridOuterPadding = 4.dp
     val GridSpacing = 16.dp

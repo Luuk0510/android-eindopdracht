@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -55,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.luuk.showtracker.data.model.MediaReview
+import com.luuk.showtracker.ui.component.CompactPrimaryButton
+import com.luuk.showtracker.ui.component.CompactPrimaryButtonDefaults
 import com.luuk.showtracker.ui.component.ProfileAvatar
 import com.luuk.showtracker.ui.component.TmdbPosterImage
 import com.luuk.showtracker.ui.theme.TextMuted
@@ -77,10 +78,7 @@ fun MediaDetailScreen(
     onWatchedToggle: () -> Unit,
     onBackClick: () -> Unit
 ) {
-    var showReviewDialog by remember { mutableStateOf(false) }
-    var reviewTitle by remember(currentReview) { mutableStateOf(currentReview?.title ?: "") }
-    var reviewText by remember(currentReview) { mutableStateOf(currentReview?.reviewText ?: "") }
-    var selectedRating by remember(currentReview) { mutableIntStateOf(currentReview?.rating ?: 0) }
+    val showReviewDialog = remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -102,33 +100,22 @@ fun MediaDetailScreen(
             profilePhotoUri = profilePhotoUri,
             currentReview = currentReview,
             isWatched = isWatched,
-            onWriteReviewClick = { showReviewDialog = true },
+            onWriteReviewClick = { showReviewDialog.value = true },
             onWatchedToggle = onWatchedToggle
         )
     }
 
-    if (showReviewDialog) {
+    if (showReviewDialog.value) {
         ReviewDialogContent(
             currentReview = currentReview,
-            reviewTitle = reviewTitle,
-            reviewText = reviewText,
-            selectedRating = selectedRating,
-            onReviewTitleChange = { reviewTitle = it },
-            onReviewTextChange = { reviewText = it },
-            onRatingSelected = { selectedRating = it },
-            onDismiss = { showReviewDialog = false },
+            onDismiss = { showReviewDialog.value = false },
             onDelete = {
                 onReviewDeleted()
-                reviewTitle = ""
-                reviewText = ""
-                selectedRating = 0
-                showReviewDialog = false
+                showReviewDialog.value = false
             },
-            onSave = {
-                if (reviewTitle.isNotBlank() && reviewText.isNotBlank() && selectedRating > 0) {
-                    onReviewSaved(reviewTitle.trim(), reviewText.trim(), selectedRating)
-                    showReviewDialog = false
-                }
+            onSave = { reviewTitle, reviewText, selectedRating ->
+                onReviewSaved(reviewTitle, reviewText, selectedRating)
+                showReviewDialog.value = false
             }
         )
     }
@@ -189,7 +176,7 @@ private fun DetailPosterBackground(posterPath: String?) {
     if (!posterPath.isNullOrBlank()) {
         TmdbPosterImage(
             posterPath = posterPath,
-            imageWidth = MediaDetailScreenDefaults.PosterImageWidth,
+            imageWidth = MediaDetailScreenDefaults.POSTER_IMAGE_WIDTH,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -312,31 +299,22 @@ private fun DetailContentSection(
             horizontalArrangement = Arrangement.spacedBy(MediaDetailScreenDefaults.ButtonSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
-                onClick = onWriteReviewClick,
-                modifier = Modifier.height(MediaDetailScreenDefaults.ActionButtonHeight),
-                contentPadding = PaddingValues(
-                    horizontal = MediaDetailScreenDefaults.ActionButtonHorizontalPadding,
-                    vertical = MediaDetailScreenDefaults.ActionButtonVerticalPadding
-                )
-            ) {
-                Text(
-                    text = if (currentReview == null) "Write a review" else "Edit review",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+            CompactPrimaryButton(
+                text = if (currentReview == null) "Write a review" else "Edit review",
+                onClick = onWriteReviewClick
+            )
 
             OutlinedButton(
                 onClick = onWatchedToggle,
-                modifier = Modifier.height(MediaDetailScreenDefaults.ActionButtonHeight),
+                modifier = Modifier.height(CompactPrimaryButtonDefaults.Height),
                 contentPadding = PaddingValues(
-                    horizontal = MediaDetailScreenDefaults.ActionButtonHorizontalPadding,
-                    vertical = MediaDetailScreenDefaults.ActionButtonVerticalPadding
+                    horizontal = CompactPrimaryButtonDefaults.HorizontalPadding,
+                    vertical = CompactPrimaryButtonDefaults.VerticalPadding
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = if (isWatched) {
                         MaterialTheme.colorScheme.secondary.copy(
-                            alpha = MediaDetailScreenDefaults.WatchedButtonAlpha
+                            alpha = MediaDetailScreenDefaults.WATCHED_BUTTON_ALPHA
                         )
                     } else {
                         Color.Transparent
@@ -447,16 +425,14 @@ private fun ReviewRatingText(rating: Int) {
 @Composable
 private fun ReviewDialogContent(
     currentReview: MediaReview?,
-    reviewTitle: String,
-    reviewText: String,
-    selectedRating: Int,
-    onReviewTitleChange: (String) -> Unit,
-    onReviewTextChange: (String) -> Unit,
-    onRatingSelected: (Int) -> Unit,
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
-    onSave: () -> Unit
+    onSave: (String, String, Int) -> Unit
 ) {
+    var reviewTitle by remember(currentReview) { mutableStateOf(currentReview?.title.orEmpty()) }
+    var reviewText by remember(currentReview) { mutableStateOf(currentReview?.reviewText.orEmpty()) }
+    var selectedRating by remember(currentReview) { mutableIntStateOf(currentReview?.rating ?: 0) }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -476,7 +452,7 @@ private fun ReviewDialogContent(
 
                 OutlinedTextField(
                     value = reviewTitle,
-                    onValueChange = onReviewTitleChange,
+                    onValueChange = { reviewTitle = it },
                     label = { Text("Review title") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -486,7 +462,7 @@ private fun ReviewDialogContent(
 
                 OutlinedTextField(
                     value = reviewText,
-                    onValueChange = onReviewTextChange,
+                    onValueChange = { reviewText = it },
                     label = { Text("Write your review") },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -507,7 +483,7 @@ private fun ReviewDialogContent(
 
                 ReviewRatingSelector(
                     selectedRating = selectedRating,
-                    onRatingSelected = onRatingSelected
+                    onRatingSelected = { selectedRating = it }
                 )
 
                 Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.DialogActionsTopSpacing))
@@ -517,18 +493,14 @@ private fun ReviewDialogContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Button(
-                            onClick = onSave,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Text(
-                                text = "Post review",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
+                        CompactPrimaryButton(
+                            text = "Post review",
+                            onClick = {
+                                if (reviewTitle.isNotBlank() && reviewText.isNotBlank() && selectedRating > 0) {
+                                    onSave(reviewTitle.trim(), reviewText.trim(), selectedRating)
+                                }
+                            }
+                        )
                     }
                 } else {
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -538,18 +510,14 @@ private fun ReviewDialogContent(
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        Button(
-                            onClick = onSave,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Text(
-                                text = "Update review",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
+                        CompactPrimaryButton(
+                            text = "Update review",
+                            onClick = {
+                                if (reviewTitle.isNotBlank() && reviewText.isNotBlank() && selectedRating > 0) {
+                                    onSave(reviewTitle.trim(), reviewText.trim(), selectedRating)
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -633,12 +601,9 @@ private object MediaDetailScreenDefaults {
     val OverviewSpacing = 8.dp
     val SectionSpacing = 16.dp
     val ButtonSpacing = 10.dp
-    val ActionButtonHeight = 38.dp
-    val ActionButtonHorizontalPadding = 14.dp
-    val ActionButtonVerticalPadding = 4.dp
     val WatchedIconSize = 18.dp
     val WatchedIconSpacing = 6.dp
-    const val WatchedButtonAlpha = 0.18f
+    const val WATCHED_BUTTON_ALPHA = 0.18f
     val ReviewCardCornerRadius = 18.dp
     val ReviewCardPadding = 16.dp
     val ReviewAvatarSize = 42.dp
@@ -653,5 +618,5 @@ private object MediaDetailScreenDefaults {
     val DialogActionsTopSpacing = 24.dp
     val ReviewTextFieldHeight = 140.dp
     val RatingStarSpacing = 4.dp
-    const val PosterImageWidth = "w500"
+    const val POSTER_IMAGE_WIDTH = "w500"
 }

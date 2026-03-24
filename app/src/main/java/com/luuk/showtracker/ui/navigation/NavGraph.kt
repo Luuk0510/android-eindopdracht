@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,11 +28,9 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,6 +61,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.luuk.showtracker.data.model.genreNames
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.ui.component.CompactPrimaryButton
 import com.luuk.showtracker.ui.component.ProfileAvatar
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
 import com.luuk.showtracker.ui.screen.SavedMediaScreen
@@ -126,6 +126,13 @@ fun ShowTrackerApp(
         searchText = ""
     }
 
+    LaunchedEffect(showProfileDialog, profile.name, profile.photoUri) {
+        if (showProfileDialog) {
+            profileName = profile.name
+            profilePhotoUri = profile.photoUri
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -136,11 +143,7 @@ fun ShowTrackerApp(
                     searchText = searchText,
                     showSearchField = showSearchField,
                     onSearchTextChanged = { searchText = it },
-                    onProfileClick = {
-                        profileName = profile.name
-                        profilePhotoUri = profile.photoUri
-                        showProfileDialog = true
-                    },
+                    onProfileClick = { showProfileDialog = true },
                     onSearchClick = {
                         if (showSearchField) {
                             showSearchField = false
@@ -169,7 +172,7 @@ fun ShowTrackerApp(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
                             indicatorColor = MaterialTheme.colorScheme.primary.copy(
-                                alpha = NavGraphDefaults.SelectedItemIndicatorAlpha
+                                alpha = NavGraphDefaults.SELECTED_ITEM_INDICATOR_ALPHA
                             )
                         ),
                         onClick = {
@@ -196,7 +199,7 @@ fun ShowTrackerApp(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
                             indicatorColor = MaterialTheme.colorScheme.primary.copy(
-                                alpha = NavGraphDefaults.SelectedItemIndicatorAlpha
+                                alpha = NavGraphDefaults.SELECTED_ITEM_INDICATOR_ALPHA
                             )
                         ),
                         onClick = {
@@ -451,9 +454,9 @@ private fun saveProfilePhoto(
     bitmap: Bitmap
 ): String? {
     return runCatching {
-        val photoFile = File(context.filesDir, NavGraphDefaults.ProfilePhotoFileName)
+        val photoFile = File(context.filesDir, NavGraphDefaults.PROFILE_PHOTO_FILE_NAME)
         FileOutputStream(photoFile).use { outputStream ->
-            bitmap.compress(Bitmap.CompressFormat.JPEG, NavGraphDefaults.ProfilePhotoQuality, outputStream)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, NavGraphDefaults.PROFILE_PHOTO_QUALITY, outputStream)
         }
         Uri.fromFile(photoFile).toString()
     }.getOrNull()
@@ -495,31 +498,50 @@ private fun ProfileDialog(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
                         tint = Color.White,
-                        modifier = Modifier.clickable(onClick = onDismiss)
+                        modifier = Modifier
+                            .clickable(onClick = onDismiss)
+                            .size(NavGraphDefaults.ProfileCloseIconSize)
                     )
                 }
 
-                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
+                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogHeaderSpacing))
 
-                ProfileAvatar(
-                    name = profileName,
-                    photoUri = profilePhotoUri,
-                    modifier = Modifier.size(NavGraphDefaults.ProfileDialogAvatarSize)
-                )
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    ProfileAvatar(
+                        name = profileName,
+                        photoUri = profilePhotoUri,
+                        modifier = Modifier.size(NavGraphDefaults.ProfileDialogAvatarSize)
+                    )
 
-                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
+                    Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
 
-                Button(onClick = onChoosePhotoClick) {
-                    Text("Choose profile photo")
+                    Text(
+                        text = profileName.ifBlank { "Guest" },
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(NavGraphDefaults.ProfileDialogSpacing)
+                    ) {
+                        CompactPrimaryButton(
+                            text = "Gallery",
+                            onClick = onChoosePhotoClick
+                        )
+
+                        CompactPrimaryButton(
+                            text = "Camera",
+                            onClick = onTakePhotoClick
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
-
-                Button(onClick = onTakePhotoClick) {
-                    Text("Take profile photo")
-                }
-
-                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
+                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileFieldSpacing))
 
                 OutlinedTextField(
                     value = profileName,
@@ -531,16 +553,14 @@ private fun ProfileDialog(
 
                 Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogActionsSpacing))
 
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel")
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Button(onClick = onSave) {
-                        Text("Save profile")
-                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CompactPrimaryButton(
+                        text = "Save profile",
+                        onClick = onSave
+                    )
                 }
             }
         }
@@ -548,9 +568,9 @@ private fun ProfileDialog(
 }
 
 private object NavGraphDefaults {
-    const val SelectedItemIndicatorAlpha = 0.16f
-    const val ProfilePhotoFileName = "profile_photo.jpg"
-    const val ProfilePhotoQuality = 92
+    const val SELECTED_ITEM_INDICATOR_ALPHA = 0.16f
+    const val PROFILE_PHOTO_FILE_NAME = "profile_photo.jpg"
+    const val PROFILE_PHOTO_QUALITY = 92
 
     val NavigationIconSize = 28.dp
     val TopBarIconSize = 28.dp
@@ -565,5 +585,8 @@ private object NavGraphDefaults {
     val ProfileDialogInnerPadding = 24.dp
     val ProfileDialogAvatarSize = 76.dp
     val ProfileDialogSpacing = 12.dp
+    val ProfileDialogHeaderSpacing = 16.dp
+    val ProfileFieldSpacing = 18.dp
     val ProfileDialogActionsSpacing = 20.dp
+    val ProfileCloseIconSize = 24.dp
 }

@@ -39,7 +39,7 @@ class MediaViewModel(
     private val _profile = MutableStateFlow(profileStorage.loadProfile())
     val profile: StateFlow<UserProfile> = _profile.asStateFlow()
 
-    private val _reviews = MutableStateFlow<Map<Int, MediaReview>>(reviewStorage.loadReviews())
+    private val _reviews = MutableStateFlow(reviewStorage.loadReviews())
     val reviews: StateFlow<Map<Int, MediaReview>> = _reviews.asStateFlow()
 
     private val _watchedIds = MutableStateFlow(watchedStorage.loadWatchedIds())
@@ -69,7 +69,7 @@ class MediaViewModel(
                     if (newItems.isEmpty()) {
                         isLastPage = true
                     } else {
-                        _mediaItems.value = _mediaItems.value + newItems
+                        _mediaItems.value += newItems
                         currentPage++
                     }
                     _errorMessage.value = null
@@ -118,13 +118,9 @@ class MediaViewModel(
         savedMediaStorage.saveSavedMedia(_savedItems.value)
     }
 
-    fun isSaved(itemId: Int): Boolean {
-        return _savedItems.value.any { it.id == itemId }
-    }
-
     fun saveProfile(name: String, photoUri: String?) {
         val updatedProfile = UserProfile(
-            name = name.ifBlank { MediaViewModelDefaults.DefaultProfileName },
+            name = name.ifBlank { MediaViewModelDefaults.DEFAULT_PROFILE_NAME },
             photoUri = photoUri
         )
         _profile.value = updatedProfile
@@ -166,5 +162,5 @@ class MediaViewModel(
 }
 
 private object MediaViewModelDefaults {
-    const val DefaultProfileName = "Guest"
+    const val DEFAULT_PROFILE_NAME = "Guest"
 }
