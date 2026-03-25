@@ -48,17 +48,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.luuk.showtracker.R
 import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.ui.component.CompactPrimaryButton
 import com.luuk.showtracker.ui.component.CompactPrimaryButtonDefaults
 import com.luuk.showtracker.ui.component.ProfileAvatar
 import com.luuk.showtracker.ui.component.TmdbPosterImage
 import com.luuk.showtracker.ui.theme.TextMuted
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +71,7 @@ fun MediaDetailScreen(
     overview: String,
     posterPath: String?,
     genreNames: List<String>,
+    releaseDate: String?,
     isSaved: Boolean,
     isWatched: Boolean,
     profileName: String,
@@ -96,6 +101,7 @@ fun MediaDetailScreen(
 
         DetailContentSection(
             overview = overview,
+            releaseDate = releaseDate,
             profileName = profileName,
             profilePhotoUri = profilePhotoUri,
             currentReview = currentReview,
@@ -226,7 +232,7 @@ private fun DetailTopActions(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.content_back),
                 tint = Color.White,
                 modifier = Modifier.size(MediaDetailScreenDefaults.TopIconSize)
             )
@@ -240,7 +246,13 @@ private fun DetailTopActions(
         ) {
             Icon(
                 imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                contentDescription = if (isSaved) "Remove from watchlist" else "Save to watchlist",
+                contentDescription = stringResource(
+                    if (isSaved) {
+                        R.string.content_remove_from_watchlist
+                    } else {
+                        R.string.content_save_to_watchlist
+                    }
+                ),
                 tint = if (isSaved) MaterialTheme.colorScheme.secondary else Color.White,
                 modifier = Modifier.size(MediaDetailScreenDefaults.TopIconSize)
             )
@@ -273,6 +285,7 @@ private fun GenreChip(genreName: String) {
 @Composable
 private fun DetailContentSection(
     overview: String,
+    releaseDate: String?,
     profileName: String,
     profilePhotoUri: String?,
     currentReview: MediaReview?,
@@ -281,8 +294,17 @@ private fun DetailContentSection(
     onWatchedToggle: () -> Unit
 ) {
     Column(modifier = Modifier.padding(MediaDetailScreenDefaults.DetailHorizontalPadding)) {
+        if (!releaseDate.isNullOrBlank()) {
+            Text(
+                text = stringResource(R.string.detail_release_date, releaseDate.toDisplayDate()),
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextMuted
+            )
+            Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.ReleaseDateBottomSpacing))
+        }
+
         Text(
-            text = "Overview",
+            text = stringResource(R.string.detail_overview),
             style = MaterialTheme.typography.titleMedium,
             color = Color.White
         )
@@ -300,7 +322,9 @@ private fun DetailContentSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             CompactPrimaryButton(
-                text = if (currentReview == null) "Write a review" else "Edit review",
+                text = stringResource(
+                    if (currentReview == null) R.string.detail_write_review else R.string.detail_edit_review
+                ),
                 onClick = onWriteReviewClick
             )
 
@@ -333,7 +357,9 @@ private fun DetailContentSection(
                 )
                 Spacer(modifier = Modifier.width(MediaDetailScreenDefaults.WatchedIconSpacing))
                 Text(
-                    text = if (isWatched) "Watched" else "Watch",
+                    text = stringResource(
+                        if (isWatched) R.string.detail_watched else R.string.detail_watch
+                    ),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -408,7 +434,7 @@ private fun ReviewCard(
 private fun ReviewRatingText(rating: Int) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = "$rating/10",
+            text = stringResource(R.string.detail_rating_value, rating),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.secondary
         )
@@ -446,14 +472,16 @@ private fun ReviewDialogContent(
         ) {
             Column(modifier = Modifier.padding(MediaDetailScreenDefaults.DialogInnerPadding)) {
                 ReviewDialogHeader(
-                    title = if (currentReview == null) "Write a review" else "Edit review",
+                    title = stringResource(
+                        if (currentReview == null) R.string.detail_write_review else R.string.detail_edit_review
+                    ),
                     onDismiss = onDismiss
                 )
 
                 OutlinedTextField(
                     value = reviewTitle,
                     onValueChange = { reviewTitle = it },
-                    label = { Text("Review title") },
+                    label = { Text(stringResource(R.string.detail_review_title_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -463,7 +491,7 @@ private fun ReviewDialogContent(
                 OutlinedTextField(
                     value = reviewText,
                     onValueChange = { reviewText = it },
-                    label = { Text("Write your review") },
+                    label = { Text(stringResource(R.string.detail_review_text_label)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(MediaDetailScreenDefaults.ReviewTextFieldHeight)
@@ -472,7 +500,11 @@ private fun ReviewDialogContent(
                 Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.DialogSectionSpacing))
 
                 Text(
-                    text = if (selectedRating > 0) "$selectedRating / 10 stars" else "Tap a star",
+                    text = if (selectedRating > 0) {
+                        stringResource(R.string.detail_rating_stars, selectedRating)
+                    } else {
+                        stringResource(R.string.detail_tap_star)
+                    },
                     color = TextMuted,
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center,
@@ -494,7 +526,7 @@ private fun ReviewDialogContent(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         CompactPrimaryButton(
-                            text = "Post review",
+                            text = stringResource(R.string.detail_post_review),
                             onClick = {
                                 if (reviewTitle.isNotBlank() && reviewText.isNotBlank() && selectedRating > 0) {
                                     onSave(reviewTitle.trim(), reviewText.trim(), selectedRating)
@@ -505,13 +537,13 @@ private fun ReviewDialogContent(
                 } else {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         TextButton(onClick = onDelete) {
-                            Text("Delete review")
+                            Text(stringResource(R.string.detail_delete_review))
                         }
 
                         Spacer(modifier = Modifier.weight(1f))
 
                         CompactPrimaryButton(
-                            text = "Update review",
+                            text = stringResource(R.string.detail_update_review),
                             onClick = {
                                 if (reviewTitle.isNotBlank() && reviewText.isNotBlank() && selectedRating > 0) {
                                     onSave(reviewTitle.trim(), reviewText.trim(), selectedRating)
@@ -543,7 +575,7 @@ private fun ReviewDialogHeader(
         IconButton(onClick = onDismiss) {
             Icon(
                 imageVector = Icons.Filled.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(R.string.content_close),
                 tint = Color.White
             )
         }
@@ -569,7 +601,7 @@ private fun ReviewRatingSelector(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Star,
-                    contentDescription = "Rate $rating",
+                    contentDescription = stringResource(R.string.content_rate_star, rating),
                     tint = if (rating <= selectedRating) {
                         MaterialTheme.colorScheme.secondary
                     } else {
@@ -594,6 +626,7 @@ private object MediaDetailScreenDefaults {
     val TitleBlockTopPadding = 24.dp
     val TitleBlockBottomPadding = 8.dp
     val GenreSpacing = 2.dp
+    val ReleaseDateBottomSpacing = 12.dp
     val GenrePillSpacing = 8.dp
     val GenrePillCornerRadius = 999.dp
     val GenrePillHorizontalPadding = 12.dp
@@ -619,4 +652,10 @@ private object MediaDetailScreenDefaults {
     val ReviewTextFieldHeight = 140.dp
     val RatingStarSpacing = 4.dp
     const val POSTER_IMAGE_WIDTH = "w500"
+}
+
+private fun String.toDisplayDate(): String {
+    return runCatching {
+        LocalDate.parse(this).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+    }.getOrDefault(this)
 }

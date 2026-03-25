@@ -33,12 +33,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import com.luuk.showtracker.R
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.component.TmdbPosterImage
 import com.luuk.showtracker.ui.theme.SurfaceDark
@@ -129,7 +131,7 @@ private fun TrendingMediaContent(
 
         if (!isLoading && shownItems.isEmpty() && searchQuery.isNotBlank()) {
             CenterMessage(
-                text = "No results found.",
+                text = stringResource(R.string.message_no_results),
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -253,7 +255,7 @@ fun MediaItemRow(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Visibility,
-                            contentDescription = "Watched",
+                            contentDescription = stringResource(R.string.content_watched),
                             tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.padding(
                                 horizontal = TrendingMediaScreenDefaults.WatchedBadgeHorizontalPadding,
@@ -299,7 +301,7 @@ fun MediaItemRow(
         }
 
         Text(
-            text = item.title ?: item.name ?: "Unknown",
+            text = item.title ?: item.name ?: stringResource(R.string.message_unknown),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             maxLines = 2,

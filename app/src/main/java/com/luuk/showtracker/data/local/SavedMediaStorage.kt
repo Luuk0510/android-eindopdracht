@@ -31,6 +31,7 @@ class SavedMediaStorage(context: Context) {
                         itemObject.optJSONArray(SavedMediaStorageDefaults.GenreIdsField)
                             ?: itemObject.optJSONArray(SavedMediaStorageDefaults.LegacyGenreIdsField)
                     ),
+                    releaseDate = itemObject.optString(SavedMediaStorageDefaults.ReleaseDateField).nullIfBlank(),
                     posterPath = itemObject
                         .optString(SavedMediaStorageDefaults.PosterPathField)
                         .ifBlank { itemObject.optString(SavedMediaStorageDefaults.LegacyPosterPathField) }
@@ -54,6 +55,7 @@ class SavedMediaStorage(context: Context) {
                     put(SavedMediaStorageDefaults.MediaTypeField, item.mediaType)
                     put(SavedMediaStorageDefaults.OverviewField, item.overview)
                     put(SavedMediaStorageDefaults.GenreIdsField, JSONArray(item.genreIds))
+                    put(SavedMediaStorageDefaults.ReleaseDateField, item.releaseDate)
                     put(SavedMediaStorageDefaults.PosterPathField, item.posterPath)
                 }
             )
@@ -87,6 +89,7 @@ private object SavedMediaStorageDefaults {
     const val MediaTypeField = "mediaType"
     const val OverviewField = "overview"
     const val GenreIdsField = "genreIds"
+    const val ReleaseDateField = "releaseDate"
     const val PosterPathField = "posterPath"
     const val LegacyMediaTypeField = "media_type"
     const val LegacyGenreIdsField = "genre_ids"

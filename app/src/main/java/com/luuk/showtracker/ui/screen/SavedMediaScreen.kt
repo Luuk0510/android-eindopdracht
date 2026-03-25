@@ -17,8 +17,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.luuk.showtracker.R
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.data.model.WatchlistSortOption
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
@@ -31,19 +34,21 @@ fun SavedMediaScreen(
     val savedItems by viewModel.savedItems.collectAsState()
     val reviews by viewModel.reviews.collectAsState()
     val watchedIds by viewModel.watchedIds.collectAsState()
+    val watchlistSortOption by viewModel.watchlistSortOption.collectAsState()
     val configuration = LocalConfiguration.current
     val columnCount = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
         SavedMediaScreenDefaults.LANDSCAPE_COLUMN_COUNT
     } else {
         SavedMediaScreenDefaults.PORTRAIT_COLUMN_COUNT
     }
-    val shownItems = savedItems.filter { item ->
+    val sortedSavedItems = savedItems.sortedForWatchlist(watchlistSortOption)
+    val shownItems = sortedSavedItems.filter { item ->
         val mediaTitle = item.title ?: item.name ?: ""
         mediaTitle.contains(searchQuery, ignoreCase = true)
     }
 
     SavedMediaContent(
-        savedItems = savedItems,
+        savedItems = sortedSavedItems,
         shownItems = shownItems,
         columnCount = columnCount,
         modifier = modifier,
@@ -66,14 +71,14 @@ private fun SavedMediaContent(
     when {
         savedItems.isEmpty() -> {
             WatchlistMessage(
-                text = "No watchlist items yet.",
+                text = stringResource(R.string.message_no_watchlist_items),
                 modifier = modifier
             )
         }
 
         shownItems.isEmpty() -> {
             WatchlistMessage(
-                text = "No results found.",
+                text = stringResource(R.string.message_no_results),
                 modifier = modifier
             )
         }
@@ -144,4 +149,15 @@ private object SavedMediaScreenDefaults {
     val GridOuterPadding = 4.dp
     val GridSpacing = 16.dp
     val ScreenPadding = 16.dp
+}
+
+private fun List<TmdbMediaItem>.sortedForWatchlist(
+    sortOption: WatchlistSortOption
+): List<TmdbMediaItem> {
+    return when (sortOption) {
+        WatchlistSortOption.NEWEST -> this
+        WatchlistSortOption.OLDEST -> this.asReversed()
+        WatchlistSortOption.TITLE_ASC -> sortedBy { (it.title ?: it.name ?: "").lowercase() }
+        WatchlistSortOption.TITLE_DESC -> sortedByDescending { (it.title ?: it.name ?: "").lowercase() }
+    }
 }

@@ -19,9 +19,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalMovies
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -31,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,11 +47,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import com.luuk.showtracker.R
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -61,6 +65,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.luuk.showtracker.data.model.genreNames
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.data.model.WatchlistSortOption
 import com.luuk.showtracker.ui.component.CompactPrimaryButton
 import com.luuk.showtracker.ui.component.ProfileAvatar
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
@@ -80,14 +85,17 @@ fun ShowTrackerApp(
 ) {
     val context = LocalContext.current
     val profile by viewModel.profile.collectAsState()
+    val watchlistSortOption by viewModel.watchlistSortOption.collectAsState()
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val isTopLevelScreen =
         currentDestination?.route == Screen.Home.route || currentDestination?.route == Screen.Saved.route
+    val isSavedScreen = currentDestination?.route == Screen.Saved.route
     var searchText by remember { mutableStateOf("") }
     var showSearchField by remember { mutableStateOf(false) }
     var showProfileDialog by remember { mutableStateOf(false) }
+    var showSortDialog by remember { mutableStateOf(false) }
     var profileName by remember(profile.name) { mutableStateOf(profile.name) }
     var profilePhotoUri by remember(profile.photoUri) { mutableStateOf(profile.photoUri) }
 
@@ -138,12 +146,12 @@ fun ShowTrackerApp(
         topBar = {
             if (isTopLevelScreen) {
                 ShowTrackerTopBar(
-                    profileName = profile.name,
-                    profilePhotoUri = profile.photoUri,
                     searchText = searchText,
                     showSearchField = showSearchField,
                     onSearchTextChanged = { searchText = it },
-                    onProfileClick = { showProfileDialog = true },
+                    showSortButton = isSavedScreen,
+                    sortLabel = stringResource(watchlistSortOption.labelResId()),
+                    onSortClick = { showSortDialog = true },
                     onSearchClick = {
                         if (showSearchField) {
                             showSearchField = false
@@ -161,12 +169,12 @@ fun ShowTrackerApp(
                     NavigationBarItem(
                         icon = {
                             Icon(
-                                Icons.Default.Home,
+                                Icons.Default.Whatshot,
                                 contentDescription = null,
                                 modifier = Modifier.size(NavGraphDefaults.NavigationIconSize)
                             )
                         },
-                        label = { Text("Trending") },
+                        label = { Text(stringResource(R.string.nav_trending)) },
                         selected = currentDestination.hierarchy.any { it.route == Screen.Home.route },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -193,7 +201,7 @@ fun ShowTrackerApp(
                                 modifier = Modifier.size(NavGraphDefaults.NavigationIconSize)
                             )
                         },
-                        label = { Text("Watchlist") },
+                        label = { Text(stringResource(R.string.nav_watchlist)) },
                         selected = currentDestination.hierarchy.any { it.route == Screen.Saved.route },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -211,6 +219,25 @@ fun ShowTrackerApp(
                                 restoreState = true
                             }
                         }
+                    )
+                    NavigationBarItem(
+                        icon = {
+                            ProfileAvatar(
+                                name = profile.name,
+                                photoUri = profile.photoUri,
+                                modifier = Modifier.size(NavGraphDefaults.NavigationProfileAvatarSize)
+                            )
+                        },
+                        label = { Text(stringResource(R.string.nav_profile)) },
+                        selected = false,
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = NavGraphDefaults.SELECTED_ITEM_INDICATOR_ALPHA
+                            )
+                        ),
+                        onClick = { showProfileDialog = true }
                     )
                 }
             }
@@ -248,6 +275,17 @@ fun ShowTrackerApp(
                     viewModel.saveProfile(profileName.trim(), profilePhotoUri)
                     showProfileDialog = false
                 }
+            )
+        }
+
+        if (showSortDialog) {
+            WatchlistSortDialog(
+                selectedSortOption = watchlistSortOption,
+                onOptionSelected = { sortOption ->
+                    viewModel.setWatchlistSortOption(sortOption)
+                    showSortDialog = false
+                },
+                onDismiss = { showSortDialog = false }
             )
         }
     }
@@ -293,7 +331,8 @@ fun SetupNavGraph(
                 navArgument("title") { type = NavType.StringType },
                 navArgument("overview") { type = NavType.StringType },
                 navArgument("poster") { type = NavType.StringType },
-                navArgument("genres") { type = NavType.StringType }
+                navArgument("genres") { type = NavType.StringType },
+                navArgument("releaseDate") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val savedItems by viewModel.savedItems.collectAsState()
@@ -317,11 +356,16 @@ fun SetupNavGraph(
                 backStackEntry.arguments?.getString("genres") ?: "",
                 StandardCharsets.UTF_8.toString()
             )
+            val releaseDate = URLDecoder.decode(
+                backStackEntry.arguments?.getString("releaseDate") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
             val mediaItem = TmdbMediaItem(
                 id = itemId,
                 title = title,
                 name = null,
                 overview = overview,
+                releaseDate = releaseDate.ifBlank { null },
                 posterPath = poster.ifBlank { null }
             )
 
@@ -330,6 +374,7 @@ fun SetupNavGraph(
                 overview = overview,
                 posterPath = mediaItem.posterPath,
                 genreNames = genres.split("|").filter { it.isNotBlank() },
+                releaseDate = mediaItem.releaseDate,
                 isSaved = savedItems.any { it.id == itemId },
                 isWatched = watchedIds.contains(itemId),
                 profileName = profile.name,
@@ -349,12 +394,12 @@ fun SetupNavGraph(
 
 @Composable
 private fun ShowTrackerTopBar(
-    profileName: String,
-    profilePhotoUri: String?,
     searchText: String,
     showSearchField: Boolean,
     onSearchTextChanged: (String) -> Unit,
-    onProfileClick: () -> Unit,
+    showSortButton: Boolean,
+    sortLabel: String,
+    onSortClick: () -> Unit,
     onSearchClick: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -393,23 +438,36 @@ private fun ShowTrackerTopBar(
                 )
                 Spacer(modifier = Modifier.padding(horizontal = NavGraphDefaults.TopBarTitleSpacing))
                 Text(
-                    text = "ShowTracker",
+                    text = stringResource(R.string.app_name),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                ProfileAvatar(
-                    name = profileName,
-                    photoUri = profilePhotoUri,
-                    modifier = Modifier
-                        .clickable(onClick = onProfileClick)
-                        .padding(end = NavGraphDefaults.ProfileSpacing)
-                        .size(NavGraphDefaults.ProfileAvatarSize)
-                )
+                if (showSortButton) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable(onClick = onSortClick)
+                            .padding(end = NavGraphDefaults.SortButtonEndPadding)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Sort,
+                            contentDescription = stringResource(R.string.topbar_sort_watchlist),
+                            tint = Color.White,
+                            modifier = Modifier.size(NavGraphDefaults.SortIconSize)
+                        )
+                        Spacer(modifier = Modifier.padding(horizontal = NavGraphDefaults.SortLabelSpacing))
+                        Text(
+                            text = sortLabel,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
                 Icon(
                     imageVector = if (showSearchField) Icons.Default.Close else Icons.Default.Search,
-                    contentDescription = "Search",
+                    contentDescription = stringResource(R.string.topbar_search),
                     tint = Color.White,
                     modifier = Modifier
                         .clickable(onClick = onSearchClick)
@@ -422,7 +480,7 @@ private fun ShowTrackerTopBar(
                 OutlinedTextField(
                     value = searchText,
                     onValueChange = onSearchTextChanged,
-                    label = { Text("Search by name") },
+                    label = { Text(stringResource(R.string.topbar_search_by_name)) },
                     singleLine = true,
                     modifier = Modifier
                         .focusRequester(focusRequester)
@@ -445,8 +503,11 @@ private fun navigateToDetails(
     val overview = URLEncoder.encode(item.overview, StandardCharsets.UTF_8.toString())
     val poster = URLEncoder.encode(item.posterPath ?: "", StandardCharsets.UTF_8.toString())
     val genres = URLEncoder.encode(item.genreNames().joinToString("|"), StandardCharsets.UTF_8.toString())
+    val releaseDate = URLEncoder.encode(item.releaseDate ?: "", StandardCharsets.UTF_8.toString())
 
-    navController.navigate(Screen.Details.createRoute(item.id, title, overview, poster, genres))
+    navController.navigate(
+        Screen.Details.createRoute(item.id, title, overview, poster, genres, releaseDate)
+    )
 }
 
 private fun saveProfilePhoto(
@@ -489,14 +550,14 @@ private fun ProfileDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Edit profile",
+                        text = stringResource(R.string.profile_edit_title),
                         style = MaterialTheme.typography.headlineSmall,
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = stringResource(R.string.content_close),
                         tint = Color.White,
                         modifier = Modifier
                             .clickable(onClick = onDismiss)
@@ -519,7 +580,7 @@ private fun ProfileDialog(
                     Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogSpacing))
 
                     Text(
-                        text = profileName.ifBlank { "Guest" },
+                        text = profileName.ifBlank { stringResource(R.string.profile_guest) },
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -530,12 +591,12 @@ private fun ProfileDialog(
                         horizontalArrangement = Arrangement.spacedBy(NavGraphDefaults.ProfileDialogSpacing)
                     ) {
                         CompactPrimaryButton(
-                            text = "Gallery",
+                            text = stringResource(R.string.profile_gallery),
                             onClick = onChoosePhotoClick
                         )
 
                         CompactPrimaryButton(
-                            text = "Camera",
+                            text = stringResource(R.string.profile_camera),
                             onClick = onTakePhotoClick
                         )
                     }
@@ -546,7 +607,7 @@ private fun ProfileDialog(
                 OutlinedTextField(
                     value = profileName,
                     onValueChange = onProfileNameChange,
-                    label = { Text("Profile name") },
+                    label = { Text(stringResource(R.string.profile_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -558,9 +619,75 @@ private fun ProfileDialog(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     CompactPrimaryButton(
-                        text = "Save profile",
+                        text = stringResource(R.string.profile_save),
                         onClick = onSave
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WatchlistSortDialog(
+    selectedSortOption: WatchlistSortOption,
+    onOptionSelected: (WatchlistSortOption) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = NavGraphDefaults.ProfileDialogOuterPadding),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(modifier = Modifier.padding(NavGraphDefaults.ProfileDialogInnerPadding)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.sort_watchlist_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.content_close),
+                        tint = Color.White,
+                        modifier = Modifier
+                            .clickable(onClick = onDismiss)
+                            .size(NavGraphDefaults.ProfileCloseIconSize)
+                    )
+                }
+
+                Spacer(modifier = Modifier.padding(top = NavGraphDefaults.ProfileDialogHeaderSpacing))
+
+                WatchlistSortOption.entries.forEach { sortOption ->
+                    TextButton(
+                        onClick = { onOptionSelected(sortOption) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(sortOption.labelResId()),
+                                color = if (sortOption == selectedSortOption) {
+                                    MaterialTheme.colorScheme.secondary
+                                } else {
+                                    Color.White
+                                },
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -579,8 +706,10 @@ private object NavGraphDefaults {
     val TopBarTitleSpacing = 5.dp
     val SearchIconPadding = 6.dp
     val SearchFieldTopPadding = 12.dp
-    val ProfileAvatarSize = 34.dp
-    val ProfileSpacing = 10.dp
+    val SortIconSize = 22.dp
+    val SortButtonEndPadding = 12.dp
+    val SortLabelSpacing = 6.dp
+    val NavigationProfileAvatarSize = 26.dp
     val ProfileDialogOuterPadding = 20.dp
     val ProfileDialogInnerPadding = 24.dp
     val ProfileDialogAvatarSize = 76.dp
@@ -589,4 +718,13 @@ private object NavGraphDefaults {
     val ProfileFieldSpacing = 18.dp
     val ProfileDialogActionsSpacing = 20.dp
     val ProfileCloseIconSize = 24.dp
+}
+
+private fun WatchlistSortOption.labelResId(): Int {
+    return when (this) {
+        WatchlistSortOption.NEWEST -> R.string.sort_newest
+        WatchlistSortOption.OLDEST -> R.string.sort_oldest
+        WatchlistSortOption.TITLE_ASC -> R.string.sort_title_asc
+        WatchlistSortOption.TITLE_DESC -> R.string.sort_title_desc
+    }
 }

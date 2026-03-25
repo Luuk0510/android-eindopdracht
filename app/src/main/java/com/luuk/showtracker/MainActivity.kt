@@ -12,6 +12,7 @@ import com.luuk.showtracker.data.api.TmdbService
 import com.luuk.showtracker.data.local.ProfileStorage
 import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
+import com.luuk.showtracker.data.local.WatchlistPreferences
 import com.luuk.showtracker.data.local.WatchedStorage
 import com.luuk.showtracker.data.repository.MediaRepository
 import com.luuk.showtracker.ui.navigation.ShowTrackerApp
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
         val profileStorage = ProfileStorage(applicationContext)
         val reviewStorage = ReviewStorage(applicationContext)
         val savedMediaStorage = SavedMediaStorage(applicationContext)
+        val watchlistPreferences = WatchlistPreferences(applicationContext)
         val watchedStorage = WatchedStorage(applicationContext)
         val viewModelFactory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -36,6 +38,7 @@ class MainActivity : ComponentActivity() {
                         profileStorage,
                         reviewStorage,
                         savedMediaStorage,
+                        watchlistPreferences,
                         watchedStorage
                     ) as T
                 }

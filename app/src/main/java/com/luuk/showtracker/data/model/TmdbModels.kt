@@ -11,5 +11,6 @@ data class TmdbMediaItem(
     val mediaType: String? = null,
     val overview: String,
     val genreIds: List<Int> = emptyList(),
+    val releaseDate: String? = null,
     val posterPath: String?
 )

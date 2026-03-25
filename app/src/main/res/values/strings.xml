@@ -1,3 +1,48 @@
 <resources>
-    <string name="app_name">Show Tracker</string>
+    <string name="app_name">ShowTracker</string>
+    <string name="nav_trending">Trending</string>
+    <string name="nav_watchlist">Watchlist</string>
+    <string name="nav_profile">Profile</string>
+    <string name="topbar_search">Search</string>
+    <string name="topbar_search_by_name">Search by name</string>
+    <string name="topbar_sort_watchlist">Sort watchlist</string>
+
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_guest">Guest</string>
+    <string name="profile_gallery">Gallery</string>
+    <string name="profile_camera">Camera</string>
+    <string name="profile_name_label">Profile name</string>
+    <string name="profile_save">Save profile</string>
+    <string name="content_close">Close</string>
+
+    <string name="sort_watchlist_title">Sort watchlist</string>
+    <string name="sort_newest">Newest</string>
+    <string name="sort_oldest">Oldest</string>
+    <string name="sort_title_asc">A-Z</string>
+    <string name="sort_title_desc">Z-A</string>
+
+    <string name="message_no_results">No results found.</string>
+    <string name="message_no_watchlist_items">No watchlist items yet.</string>
+    <string name="message_unknown">Unknown</string>
+
+    <string name="content_watched">Watched</string>
+    <string name="content_back">Back</string>
+    <string name="content_remove_from_watchlist">Remove from watchlist</string>
+    <string name="content_save_to_watchlist">Save to watchlist</string>
+    <string name="content_rate_star">Rate %1$d</string>
+
+    <string name="detail_release_date">Release date: %1$s</string>
+    <string name="detail_overview">Overview</string>
+    <string name="detail_write_review">Write a review</string>
+    <string name="detail_edit_review">Edit review</string>
+    <string name="detail_watch">Watch</string>
+    <string name="detail_watched">Watched</string>
+    <string name="detail_review_title_label">Review title</string>
+    <string name="detail_review_text_label">Write your review</string>
+    <string name="detail_tap_star">Tap a star</string>
+    <string name="detail_rating_stars">%1$d / 10 stars</string>
+    <string name="detail_rating_value">%1$d/10</string>
+    <string name="detail_post_review">Post review</string>
+    <string name="detail_delete_review">Delete review</string>
+    <string name="detail_update_review">Update review</string>
 </resources>

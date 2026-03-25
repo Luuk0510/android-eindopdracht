@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.luuk.showtracker.data.local.ProfileStorage
 import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
+import com.luuk.showtracker.data.local.WatchlistPreferences
 import com.luuk.showtracker.data.local.WatchedStorage
 import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.model.UserProfile
+import com.luuk.showtracker.data.model.WatchlistSortOption
 import com.luuk.showtracker.data.repository.MediaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +26,7 @@ class MediaViewModel(
     private val profileStorage: ProfileStorage,
     private val reviewStorage: ReviewStorage,
     private val savedMediaStorage: SavedMediaStorage,
+    private val watchlistPreferences: WatchlistPreferences,
     private val watchedStorage: WatchedStorage
 ) : ViewModel() {
 
@@ -41,6 +44,9 @@ class MediaViewModel(
 
     private val _reviews = MutableStateFlow(reviewStorage.loadReviews())
     val reviews: StateFlow<Map<Int, MediaReview>> = _reviews.asStateFlow()
+
+    private val _watchlistSortOption = MutableStateFlow(watchlistPreferences.loadSortOption())
+    val watchlistSortOption: StateFlow<WatchlistSortOption> = _watchlistSortOption.asStateFlow()
 
     private val _watchedIds = MutableStateFlow(watchedStorage.loadWatchedIds())
     val watchedIds: StateFlow<Set<Int>> = _watchedIds.asStateFlow()
@@ -132,6 +138,11 @@ class MediaViewModel(
             if (contains(itemId)) remove(itemId) else add(itemId)
         }
         watchedStorage.saveWatchedIds(_watchedIds.value)
+    }
+
+    fun setWatchlistSortOption(sortOption: WatchlistSortOption) {
+        _watchlistSortOption.value = sortOption
+        watchlistPreferences.saveSortOption(sortOption)
     }
 
     fun saveReview(

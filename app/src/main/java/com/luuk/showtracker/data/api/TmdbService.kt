@@ -77,6 +77,9 @@ class TmdbService(context: Context) {
             mediaType = itemObject.optString("media_type").nullIfBlank(),
             overview = itemObject.optString("overview"),
             genreIds = parseGenreIds(itemObject.optJSONArray("genre_ids")),
+            releaseDate = itemObject.optString("release_date")
+                .ifBlank { itemObject.optString("first_air_date") }
+                .nullIfBlank(),
             posterPath = itemObject.optString("poster_path").nullIfBlank()
         )
     }
