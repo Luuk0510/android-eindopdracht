@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -112,7 +113,7 @@ internal fun ShowTrackerTopBar(
     }
 
     Surface(
-        color = MaterialTheme.colorScheme.background,
+        color = NavigationBarDefaults.containerColor,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
     ) {

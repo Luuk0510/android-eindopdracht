@@ -13,7 +13,7 @@ internal object AppNavigationDefaults {
     val NavigationIconSize = 28.dp
     val TopBarIconSize = 28.dp
     val TopBarHorizontalPadding = 16.dp
-    val TopBarVerticalPadding = 12.dp
+    val TopBarVerticalPadding = 8.dp
     val TopBarTitleSpacing = 5.dp
     val SearchIconPadding = 6.dp
     val SearchFieldTopPadding = 12.dp
