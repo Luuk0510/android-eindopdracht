@@ -17,4 +17,16 @@ class MediaRepository(private val tmdbService: TmdbService) {
             Result.failure(e)
         }
     }
+
+    suspend fun searchMedia(query: String): Result<List<TmdbMediaItem>> {
+        return try {
+            val response = tmdbService.searchMedia(
+                apiKey = BuildConfig.TMDB_API_KEY,
+                query = query
+            )
+            Result.success(response.results)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
