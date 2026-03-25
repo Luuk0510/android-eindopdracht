@@ -69,25 +69,10 @@ internal fun ProfileDialogHost(
         }
     }
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            }
-            editedProfilePhotoUriState.value = uri.toString()
-        }
-    }
-
     ProfileDialog(
         profileName = editedProfileNameState.value,
         profilePhotoUri = editedProfilePhotoUriState.value,
         onProfileNameChange = { editedProfileNameState.value = it },
-        onChoosePhotoClick = { imagePickerLauncher.launch(arrayOf("image/*")) },
         onTakePhotoClick = {
             val hasCameraPermission = ContextCompat.checkSelfPermission(
                 context,
@@ -110,7 +95,6 @@ private fun ProfileDialog(
     profileName: String,
     profilePhotoUri: String?,
     onProfileNameChange: (String) -> Unit,
-    onChoosePhotoClick: () -> Unit,
     onTakePhotoClick: () -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit
@@ -170,13 +154,9 @@ private fun ProfileDialog(
                     Spacer(modifier = Modifier.padding(top = AppNavigationDefaults.ProfileDialogSpacing))
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(AppNavigationDefaults.ProfileDialogSpacing)
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        CompactPrimaryButton(
-                            text = stringResource(R.string.profile_gallery),
-                            onClick = onChoosePhotoClick
-                        )
-
                         CompactPrimaryButton(
                             text = stringResource(R.string.profile_camera),
                             onClick = onTakePhotoClick

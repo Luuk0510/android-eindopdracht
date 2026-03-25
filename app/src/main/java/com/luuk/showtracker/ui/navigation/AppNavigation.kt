@@ -20,15 +20,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.model.genreNames
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
 import com.luuk.showtracker.ui.screen.SavedMediaScreen
 import com.luuk.showtracker.ui.screen.TrendingMediaScreen
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @Composable
 fun ShowTrackerApp(
@@ -151,7 +147,7 @@ fun SetupAppNavigation(
             TrendingMediaScreen(
                 viewModel = viewModel,
                 searchQuery = searchText,
-                onItemClick = { item -> navigateToDetails(navController, item) }
+                onItemClick = { item -> navigateToDetails(navController, item.id) }
             )
         }
 
@@ -160,9 +156,8 @@ fun SetupAppNavigation(
                 viewModel = viewModel,
                 searchQuery = searchText,
                 onItemClick = { itemId ->
-                    val savedItem = viewModel.savedItems.value.firstOrNull { it.id == itemId }
-                    if (savedItem != null) {
-                        navigateToDetails(navController, savedItem)
+                    if (viewModel.getMediaItemById(itemId) != null) {
+                        navigateToDetails(navController, itemId)
                     }
                 }
             )
@@ -171,12 +166,7 @@ fun SetupAppNavigation(
         composable(
             route = Screen.Details.route,
             arguments = listOf(
-                navArgument("id") { type = NavType.IntType },
-                navArgument("title") { type = NavType.StringType },
-                navArgument("overview") { type = NavType.StringType },
-                navArgument("poster") { type = NavType.StringType },
-                navArgument("genres") { type = NavType.StringType },
-                navArgument("releaseDate") { type = NavType.StringType }
+                navArgument("id") { type = NavType.IntType }
             )
         ) { backStackEntry ->
             val savedItems by viewModel.savedItems.collectAsState()
@@ -184,40 +174,14 @@ fun SetupAppNavigation(
             val reviews by viewModel.reviews.collectAsState()
             val watchedIds by viewModel.watchedIds.collectAsState()
             val itemId = backStackEntry.arguments?.getInt("id") ?: 0
-            val title = URLDecoder.decode(
-                backStackEntry.arguments?.getString("title") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val overview = URLDecoder.decode(
-                backStackEntry.arguments?.getString("overview") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val poster = URLDecoder.decode(
-                backStackEntry.arguments?.getString("poster") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val genres = URLDecoder.decode(
-                backStackEntry.arguments?.getString("genres") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val releaseDate = URLDecoder.decode(
-                backStackEntry.arguments?.getString("releaseDate") ?: "",
-                StandardCharsets.UTF_8.toString()
-            )
-            val mediaItem = TmdbMediaItem(
-                id = itemId,
-                title = title,
-                name = null,
-                overview = overview,
-                releaseDate = releaseDate.ifBlank { null },
-                posterPath = poster.ifBlank { null }
-            )
+            val mediaItem = viewModel.getMediaItemById(itemId)
+                ?: viewModel.createFallbackMediaItem(itemId)
 
             MediaDetailScreen(
-                title = title,
-                overview = overview,
+                title = mediaItem.title ?: mediaItem.name.orEmpty(),
+                overview = mediaItem.overview,
                 posterPath = mediaItem.posterPath,
-                genreNames = genres.split("|").filter { it.isNotBlank() },
+                genreNames = mediaItem.genreNames(),
                 releaseDate = mediaItem.releaseDate,
                 isSaved = savedItems.any { it.id == itemId },
                 isWatched = watchedIds.contains(itemId),
@@ -238,18 +202,7 @@ fun SetupAppNavigation(
 
 private fun navigateToDetails(
     navController: NavHostController,
-    item: TmdbMediaItem
+    itemId: Int
 ) {
-    val title = URLEncoder.encode(
-        item.title ?: item.name ?: "Unknown",
-        StandardCharsets.UTF_8.toString()
-    )
-    val overview = URLEncoder.encode(item.overview, StandardCharsets.UTF_8.toString())
-    val poster = URLEncoder.encode(item.posterPath ?: "", StandardCharsets.UTF_8.toString())
-    val genres = URLEncoder.encode(item.genreNames().joinToString("|"), StandardCharsets.UTF_8.toString())
-    val releaseDate = URLEncoder.encode(item.releaseDate ?: "", StandardCharsets.UTF_8.toString())
-
-    navController.navigate(
-        Screen.Details.createRoute(item.id, title, overview, poster, genres, releaseDate)
-    )
+    navController.navigate(Screen.Details.createRoute(itemId))
 }

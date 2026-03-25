@@ -78,10 +78,10 @@ class MediaViewModel(
                         _mediaItems.value += newItems
                         currentPage++
                     }
-                    _errorMessage.value = null
+                    clearError()
                 }
                 .onFailure { error ->
-                    _errorMessage.value = error.message ?: "Unknown error occurred"
+                    setError(error)
                 }
             _isLoading.value = false
         }
@@ -92,21 +92,21 @@ class MediaViewModel(
 
         if (query.isBlank()) {
             _searchResults.value = emptyList()
-            _errorMessage.value = null
+            clearError()
             return
         }
 
         searchJob = viewModelScope.launch {
-            delay(300)
+            delay(MediaViewModelDefaults.SEARCH_DEBOUNCE_MS)
             _isLoading.value = true
             repository.searchMedia(query)
                 .onSuccess { results ->
                     _searchResults.value = results
-                    _errorMessage.value = null
+                    clearError()
                 }
                 .onFailure { error ->
                     _searchResults.value = emptyList()
-                    _errorMessage.value = error.message ?: "Unknown error occurred"
+                    setError(error)
                 }
             _isLoading.value = false
         }
@@ -121,7 +121,7 @@ class MediaViewModel(
         } else {
             listOf(item) + currentSavedItems
         }
-        savedMediaStorage.saveSavedMedia(_savedItems.value)
+        saveCurrentSavedItems()
     }
 
     fun saveProfile(name: String, photoUri: String?) {
@@ -137,7 +137,7 @@ class MediaViewModel(
         _watchedIds.value = _watchedIds.value.toMutableSet().apply {
             if (contains(itemId)) remove(itemId) else add(itemId)
         }
-        watchedStorage.saveWatchedIds(_watchedIds.value)
+        saveCurrentWatchedIds()
     }
 
     fun setWatchlistSortOption(sortOption: WatchlistSortOption) {
@@ -156,22 +156,67 @@ class MediaViewModel(
             title = title,
             reviewText = reviewText,
             rating = rating,
-            dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
+            dateTime = createReviewDateTime()
         )
         _reviews.value = _reviews.value.toMutableMap().apply {
             this[itemId] = review
         }
-        reviewStorage.saveReviews(_reviews.value)
+        saveCurrentReviews()
     }
 
     fun deleteReview(itemId: Int) {
         _reviews.value = _reviews.value.toMutableMap().apply {
             remove(itemId)
         }
+        saveCurrentReviews()
+    }
+
+    fun getMediaItemById(itemId: Int): TmdbMediaItem? {
+        return _savedItems.value.firstOrNull { it.id == itemId }
+            ?: _searchResults.value.firstOrNull { it.id == itemId }
+            ?: _mediaItems.value.firstOrNull { it.id == itemId }
+    }
+
+    fun createFallbackMediaItem(itemId: Int): TmdbMediaItem {
+        return TmdbMediaItem(
+            id = itemId,
+            title = "",
+            name = null,
+            overview = "",
+            posterPath = null
+        )
+    }
+
+    private fun clearError() {
+        _errorMessage.value = null
+    }
+
+    private fun setError(error: Throwable) {
+        _errorMessage.value = error.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+    }
+
+    private fun saveCurrentSavedItems() {
+        savedMediaStorage.saveSavedMedia(_savedItems.value)
+    }
+
+    private fun saveCurrentWatchedIds() {
+        watchedStorage.saveWatchedIds(_watchedIds.value)
+    }
+
+    private fun saveCurrentReviews() {
         reviewStorage.saveReviews(_reviews.value)
+    }
+
+    private fun createReviewDateTime(): String {
+        return LocalDateTime.now().format(
+            DateTimeFormatter.ofPattern(MediaViewModelDefaults.REVIEW_DATE_TIME_PATTERN)
+        )
     }
 }
 
 private object MediaViewModelDefaults {
     const val DEFAULT_PROFILE_NAME = "Guest"
+    const val UNKNOWN_ERROR_MESSAGE = "Unknown error occurred"
+    const val REVIEW_DATE_TIME_PATTERN = "dd-MM-yyyy HH:mm"
+    const val SEARCH_DEBOUNCE_MS = 300L
 }

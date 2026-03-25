@@ -8,11 +8,11 @@ class MediaRepository(private val tmdbService: TmdbService) {
     
     suspend fun getTrendingMedia(page: Int): Result<List<TmdbMediaItem>> {
         return try {
-            val response = tmdbService.getTrending(
+            val mediaItems = tmdbService.getTrending(
                 apiKey = BuildConfig.TMDB_API_KEY, 
                 page = page
             )
-            Result.success(response.results)
+            Result.success(mediaItems)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -20,11 +20,11 @@ class MediaRepository(private val tmdbService: TmdbService) {
 
     suspend fun searchMedia(query: String): Result<List<TmdbMediaItem>> {
         return try {
-            val response = tmdbService.searchMedia(
+            val mediaItems = tmdbService.searchMedia(
                 apiKey = BuildConfig.TMDB_API_KEY,
                 query = query
             )
-            Result.success(response.results)
+            Result.success(mediaItems)
         } catch (e: Exception) {
             Result.failure(e)
         }
