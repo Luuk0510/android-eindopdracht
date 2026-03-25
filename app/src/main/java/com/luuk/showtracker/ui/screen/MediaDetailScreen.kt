@@ -372,6 +372,6 @@ private object MediaDetailScreenDefaults {
 
 private fun String.toDisplayDate(): String {
     return runCatching {
-        LocalDate.parse(this).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+        LocalDate.parse(this).format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
     }.getOrDefault(this)
 }
