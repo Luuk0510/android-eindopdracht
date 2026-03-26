@@ -147,7 +147,10 @@ fun SetupAppNavigation(
             TrendingMediaScreen(
                 viewModel = viewModel,
                 searchQuery = searchText,
-                onItemClick = { item -> navigateToDetails(navController, item.id) }
+                onItemClick = { item ->
+                    viewModel.selectMediaItem(item)
+                    navigateToDetails(navController, item.id)
+                }
             )
         }
 
@@ -156,7 +159,9 @@ fun SetupAppNavigation(
                 viewModel = viewModel,
                 searchQuery = searchText,
                 onItemClick = { itemId ->
-                    if (viewModel.getMediaItemById(itemId) != null) {
+                    val mediaItem = viewModel.getMediaItemById(itemId)
+                    if (mediaItem != null) {
+                        viewModel.selectMediaItem(mediaItem)
                         navigateToDetails(navController, itemId)
                     }
                 }

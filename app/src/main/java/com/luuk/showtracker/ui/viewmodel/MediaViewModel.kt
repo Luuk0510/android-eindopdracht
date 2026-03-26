@@ -60,6 +60,7 @@ class MediaViewModel(
     private var currentPage = 1
     private var isLastPage = false
     private var searchJob: Job? = null
+    private var selectedMediaItem: TmdbMediaItem? = null
 
     init {
         loadNextPage()
@@ -185,7 +186,15 @@ class MediaViewModel(
         reviewStorage.saveReviews(_reviews.value)
     }
 
+    fun selectMediaItem(item: TmdbMediaItem) {
+        selectedMediaItem = item
+    }
+
     fun getMediaItemById(itemId: Int): TmdbMediaItem? {
+        if (selectedMediaItem?.id == itemId) {
+            return selectedMediaItem
+        }
+
         val savedItem = _savedItems.value.firstOrNull { it.id == itemId }
         if (savedItem != null) {
             return savedItem
