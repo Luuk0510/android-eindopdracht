@@ -27,5 +27,5 @@ class ProfileStorage(context: Context) {
 private object ProfileStorageDefaults {
     const val NAME_KEY = "profile_name"
     const val PHOTO_URI_KEY = "profile_photo_uri"
-    const val DEFAULT_NAME = "Guest"
+    const val DEFAULT_NAME = "User"
 }

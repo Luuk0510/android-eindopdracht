@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ fun ReviewCard(
     review: MediaReview,
     profileName: String,
     profilePhotoUri: String?,
+    onEditClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -75,6 +77,15 @@ fun ReviewCard(
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White
             )
+
+            if (onEditClick != null) {
+                TextButton(
+                    onClick = onEditClick,
+                    modifier = Modifier.padding(top = ReviewCardDefaults.EditButtonTopPadding)
+                ) {
+                    Text(stringResource(R.string.detail_edit_review))
+                }
+            }
         }
     }
 }
@@ -106,4 +117,5 @@ private object ReviewCardDefaults {
     val RatingStarSize = 22.dp
     val TextSpacing = 12.dp
     val RatingStarSpacing = 4.dp
+    val EditButtonTopPadding = 12.dp
 }

@@ -314,7 +314,7 @@ fun MediaItemRow(
 
 private object TrendingMediaScreenDefaults {
     const val PORTRAIT_COLUMN_COUNT = 2
-    const val LANDSCAPE_COLUMN_COUNT = 3
+    const val LANDSCAPE_COLUMN_COUNT = 4
     const val PREFETCH_THRESHOLD = 5
 
     val GridOuterPadding = 4.dp

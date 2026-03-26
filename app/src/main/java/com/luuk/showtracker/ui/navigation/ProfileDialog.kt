@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,6 +74,7 @@ internal fun ProfileDialogHost(
         profileName = editedProfileNameState.value,
         profilePhotoUri = editedProfilePhotoUriState.value,
         onProfileNameChange = { editedProfileNameState.value = it },
+        onRemovePhotoClick = { editedProfilePhotoUriState.value = null },
         onTakePhotoClick = {
             val hasCameraPermission = ContextCompat.checkSelfPermission(
                 context,
@@ -95,6 +97,7 @@ private fun ProfileDialog(
     profileName: String,
     profilePhotoUri: String?,
     onProfileNameChange: (String) -> Unit,
+    onRemovePhotoClick: () -> Unit,
     onTakePhotoClick: () -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit
@@ -146,21 +149,33 @@ private fun ProfileDialog(
                     Spacer(modifier = Modifier.padding(top = AppNavigationDefaults.ProfileDialogSpacing))
 
                     Text(
-                        text = profileName.ifBlank { stringResource(R.string.profile_guest) },
+                        text = profileName.ifBlank { stringResource(R.string.profile_user) },
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.padding(top = AppNavigationDefaults.ProfileDialogSpacing))
 
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        CompactPrimaryButton(
-                            text = stringResource(R.string.profile_camera),
-                            onClick = onTakePhotoClick
-                        )
+                }
+
+                Spacer(modifier = Modifier.padding(top = AppNavigationDefaults.ProfileFieldSpacing))
+
+                Text(
+                    text = stringResource(R.string.profile_photo_label),
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.padding(top = AppNavigationDefaults.ProfileDialogSpacing))
+
+                CompactPrimaryButton(
+                    text = stringResource(R.string.profile_change_photo),
+                    onClick = onTakePhotoClick
+                )
+
+                if (profilePhotoUri != null) {
+                    TextButton(onClick = onRemovePhotoClick) {
+                        Text(stringResource(R.string.profile_remove_photo))
                     }
                 }
 

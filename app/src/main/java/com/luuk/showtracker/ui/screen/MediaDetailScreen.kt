@@ -288,52 +288,26 @@ private fun DetailContentSection(
 
         Spacer(modifier = Modifier.height(MediaDetailScreenDefaults.SectionSpacing))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(MediaDetailScreenDefaults.ButtonSpacing),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            CompactPrimaryButton(
-                text = stringResource(
-                    if (currentReview == null) R.string.detail_write_review else R.string.detail_edit_review
-                ),
-                onClick = onWriteReviewClick
-            )
-
-            OutlinedButton(
-                onClick = onWatchedToggle,
-                modifier = Modifier.height(CompactPrimaryButtonDefaults.Height),
-                contentPadding = PaddingValues(
-                    horizontal = CompactPrimaryButtonDefaults.HorizontalPadding,
-                    vertical = CompactPrimaryButtonDefaults.VerticalPadding
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (isWatched) {
-                        MaterialTheme.colorScheme.secondary.copy(
-                            alpha = MediaDetailScreenDefaults.WATCHED_BUTTON_ALPHA
-                        )
-                    } else {
-                        Color.Transparent
-                    },
-                    contentColor = if (isWatched) {
-                        MaterialTheme.colorScheme.secondary
-                    } else {
-                        Color.White
-                    }
-                )
+        if (currentReview == null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(MediaDetailScreenDefaults.ButtonSpacing),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Visibility,
-                    contentDescription = null,
-                    modifier = Modifier.size(MediaDetailScreenDefaults.WatchedIconSize)
+                CompactPrimaryButton(
+                    text = stringResource(R.string.detail_write_review),
+                    onClick = onWriteReviewClick
                 )
-                Spacer(modifier = Modifier.width(MediaDetailScreenDefaults.WatchedIconSpacing))
-                Text(
-                    text = stringResource(
-                        if (isWatched) R.string.detail_watched else R.string.detail_watch
-                    ),
-                    style = MaterialTheme.typography.titleMedium
+
+                WatchedButton(
+                    isWatched = isWatched,
+                    onWatchedToggle = onWatchedToggle
                 )
             }
+        } else {
+            WatchedButton(
+                isWatched = isWatched,
+                onWatchedToggle = onWatchedToggle
+            )
         }
 
         if (currentReview != null) {
@@ -341,9 +315,52 @@ private fun DetailContentSection(
             ReviewCard(
                 review = currentReview,
                 profileName = profileName,
-                profilePhotoUri = profilePhotoUri
+                profilePhotoUri = profilePhotoUri,
+                onEditClick = onWriteReviewClick
             )
         }
+    }
+}
+
+@Composable
+private fun WatchedButton(
+    isWatched: Boolean,
+    onWatchedToggle: () -> Unit
+) {
+    OutlinedButton(
+        onClick = onWatchedToggle,
+        modifier = Modifier.height(CompactPrimaryButtonDefaults.Height),
+        contentPadding = PaddingValues(
+            horizontal = CompactPrimaryButtonDefaults.HorizontalPadding,
+            vertical = CompactPrimaryButtonDefaults.VerticalPadding
+        ),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (isWatched) {
+                MaterialTheme.colorScheme.secondary.copy(
+                    alpha = MediaDetailScreenDefaults.WATCHED_BUTTON_ALPHA
+                )
+            } else {
+                Color.Transparent
+            },
+            contentColor = if (isWatched) {
+                MaterialTheme.colorScheme.secondary
+            } else {
+                Color.White
+            }
+        )
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Visibility,
+            contentDescription = null,
+            modifier = Modifier.size(MediaDetailScreenDefaults.WatchedIconSize)
+        )
+        Spacer(modifier = Modifier.width(MediaDetailScreenDefaults.WatchedIconSpacing))
+        Text(
+            text = stringResource(
+                if (isWatched) R.string.detail_watched else R.string.detail_watch
+            ),
+            style = MaterialTheme.typography.titleMedium
+        )
     }
 }
 

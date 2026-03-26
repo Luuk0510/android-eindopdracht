@@ -225,7 +225,7 @@ class MediaViewModel(
 }
 
 private object MediaViewModelDefaults {
-    const val DEFAULT_PROFILE_NAME = "Guest"
+    const val DEFAULT_PROFILE_NAME = "User"
     const val UNKNOWN_ERROR_MESSAGE = "Unknown error occurred"
     const val REVIEW_DATE_TIME_PATTERN = "dd-MM-yyyy HH:mm"
     const val SEARCH_DEBOUNCE_MS = 300L

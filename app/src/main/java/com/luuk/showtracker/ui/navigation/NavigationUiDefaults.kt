@@ -10,17 +10,17 @@ internal object AppNavigationDefaults {
     const val PROFILE_PHOTO_FILE_NAME = "profile_photo.jpg"
     const val PROFILE_PHOTO_QUALITY = 92
 
-    val NavigationIconSize = 28.dp
+    val NavigationIconSize = 26.dp
     val TopBarIconSize = 28.dp
     val TopBarHorizontalPadding = 16.dp
-    val TopBarVerticalPadding = 8.dp
+    val TopBarVerticalPadding = 4.dp
     val TopBarTitleSpacing = 5.dp
     val SearchIconPadding = 6.dp
     val SearchFieldTopPadding = 12.dp
     val SortIconSize = 22.dp
     val SortButtonEndPadding = 12.dp
     val SortLabelSpacing = 6.dp
-    val NavigationProfileAvatarSize = 26.dp
+    val NavigationProfileAvatarSize = 24.dp
     val ProfileDialogOuterPadding = 20.dp
     val ProfileDialogInnerPadding = 24.dp
     val ProfileDialogAvatarSize = 76.dp
