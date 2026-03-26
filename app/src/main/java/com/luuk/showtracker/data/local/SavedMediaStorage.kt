@@ -1,6 +1,7 @@
 package com.luuk.showtracker.data.local
 
 import android.content.Context
+import androidx.core.content.edit
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import org.json.JSONArray
 import org.json.JSONObject
@@ -61,9 +62,9 @@ class SavedMediaStorage(context: Context) {
             )
         }
 
-        sharedPreferences.edit()
-            .putString(SavedMediaStorageDefaults.SAVED_MEDIA_KEY, savedMediaArray.toString())
-            .apply()
+        sharedPreferences.edit {
+            putString(SavedMediaStorageDefaults.SAVED_MEDIA_KEY, savedMediaArray.toString())
+        }
     }
 }
 

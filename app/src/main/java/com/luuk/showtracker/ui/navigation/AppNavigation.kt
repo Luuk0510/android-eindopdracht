@@ -41,8 +41,8 @@ fun ShowTrackerApp(
     val isSavedScreen = currentDestination?.route == Screen.Saved.route
     var searchText by remember { mutableStateOf("") }
     var showSearchField by remember { mutableStateOf(false) }
-    var showProfileDialog by remember { mutableStateOf(false) }
-    var showSortDialog by remember { mutableStateOf(false) }
+    val showProfileDialogState = remember { mutableStateOf(false) }
+    val showSortDialogState = remember { mutableStateOf(false) }
 
     LaunchedEffect(currentDestination?.route) {
         showSearchField = false
@@ -59,7 +59,7 @@ fun ShowTrackerApp(
                     onSearchTextChanged = { searchText = it },
                     showSortButton = isSavedScreen,
                     sortLabel = stringResource(watchlistSortOption.labelResId()),
-                    onSortClick = { showSortDialog = true },
+                    onSortClick = { showSortDialogState.value = true },
                     onSearchClick = {
                         if (showSearchField) {
                             showSearchField = false
@@ -95,7 +95,7 @@ fun ShowTrackerApp(
                             restoreState = true
                         }
                     },
-                    onProfileClick = { showProfileDialog = true }
+                    onProfileClick = { showProfileDialogState.value = true }
                 )
             }
         }
@@ -110,22 +110,22 @@ fun ShowTrackerApp(
         ProfileDialogHost(
             profileName = profile.name,
             profilePhotoUri = profile.photoUri,
-            showProfileDialog = showProfileDialog,
-            onDismiss = { showProfileDialog = false },
+            showProfileDialog = showProfileDialogState.value,
+            onDismiss = { showProfileDialogState.value = false },
             onSave = { name, photoUri ->
                 viewModel.saveProfile(name, photoUri)
-                showProfileDialog = false
+                showProfileDialogState.value = false
             }
         )
 
-        if (showSortDialog) {
+        if (showSortDialogState.value) {
             WatchlistSortDialog(
                 selectedSortOption = watchlistSortOption,
                 onOptionSelected = { sortOption ->
                     viewModel.setWatchlistSortOption(sortOption)
-                    showSortDialog = false
+                    showSortDialogState.value = false
                 },
-                onDismiss = { showSortDialog = false }
+                onDismiss = { showSortDialogState.value = false }
             )
         }
     }

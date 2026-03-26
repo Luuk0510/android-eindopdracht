@@ -1,18 +1,15 @@
 package com.luuk.showtracker.data.api
 
 import android.content.Context
+import android.net.Uri
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.luuk.showtracker.data.model.TmdbMediaItem
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -23,7 +20,7 @@ class TmdbService(context: Context) {
         apiKey: String,
         page: Int
     ): List<TmdbMediaItem> {
-        val url = "${TmdbServiceDefaults.BASEURL}trending/all/day?api_key=$apiKey&page=$page"
+        val url = "${TmdbServiceDefaults.BASE_URL}trending/all/day?api_key=$apiKey&page=$page"
         return fetchMediaItems(url)
     }
 
@@ -31,25 +28,23 @@ class TmdbService(context: Context) {
         apiKey: String,
         query: String
     ): List<TmdbMediaItem> {
-        val encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
-        val url = "${TmdbServiceDefaults.BASEURL}search/multi?api_key=$apiKey&query=$encodedQuery"
+        val encodedQuery = Uri.encode(query)
+        val url = "${TmdbServiceDefaults.BASE_URL}search/multi?api_key=$apiKey&query=$encodedQuery"
         return fetchMediaItems(url)
     }
 
     private suspend fun fetchMediaItems(url: String): List<TmdbMediaItem> =
-        withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                val request = JsonObjectRequest(
-                    Request.Method.GET,
-                    url,
-                    null,
-                    { response -> continuation.resume(parseMediaItems(response)) },
-                    { error -> continuation.resumeWithException(error) }
-                )
-                request.setShouldCache(true)
-                continuation.invokeOnCancellation { request.cancel() }
-                requestQueue.add(request)
-            }
+        suspendCancellableCoroutine { continuation ->
+            val request = JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                { response -> continuation.resume(parseMediaItems(response)) },
+                { error -> continuation.resumeWithException(error) }
+            )
+            request.setShouldCache(true)
+            continuation.invokeOnCancellation { request.cancel() }
+            requestQueue.add(request)
         }
 
     private fun parseMediaItems(response: JSONObject): List<TmdbMediaItem> {
@@ -93,5 +88,5 @@ private fun String.nullIfBlank(): String? {
 }
 
 private object TmdbServiceDefaults {
-    const val BASEURL = "https://api.themoviedb.org/3/"
+    const val BASE_URL = "https://api.themoviedb.org/3/"
 }

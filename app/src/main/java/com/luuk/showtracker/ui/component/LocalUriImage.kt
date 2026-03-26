@@ -2,7 +2,6 @@ package com.luuk.showtracker.ui.component
 
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -12,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -51,7 +51,7 @@ private suspend fun loadBitmap(
 
     return withContext(Dispatchers.IO) {
         runCatching {
-            val parsedUri = Uri.parse(imageUri)
+            val parsedUri = imageUri.toUri()
             if (parsedUri.scheme == "file") {
                 BitmapFactory.decodeFile(parsedUri.path)
             } else {
