@@ -50,7 +50,7 @@ private suspend fun loadBitmap(
     if (imageUri.isNullOrBlank()) return null
 
     return withContext(Dispatchers.IO) {
-        runCatching {
+        try {
             val parsedUri = imageUri.toUri()
             if (parsedUri.scheme == "file") {
                 BitmapFactory.decodeFile(parsedUri.path)
@@ -58,6 +58,8 @@ private suspend fun loadBitmap(
                 val source = ImageDecoder.createSource(context.contentResolver, parsedUri)
                 ImageDecoder.decodeBitmap(source)
             }
-        }.getOrNull()
+        } catch (_: Exception) {
+            null
+        }
     }
 }

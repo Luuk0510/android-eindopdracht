@@ -33,8 +33,8 @@ class TmdbService(context: Context) {
         return fetchMediaItems(url)
     }
 
-    private suspend fun fetchMediaItems(url: String): List<TmdbMediaItem> =
-        suspendCancellableCoroutine { continuation ->
+    private suspend fun fetchMediaItems(url: String): List<TmdbMediaItem> {
+        return suspendCancellableCoroutine { continuation ->
             val request = JsonObjectRequest(
                 Request.Method.GET,
                 url,
@@ -46,6 +46,7 @@ class TmdbService(context: Context) {
             continuation.invokeOnCancellation { request.cancel() }
             requestQueue.add(request)
         }
+    }
 
     private fun parseMediaItems(response: JSONObject): List<TmdbMediaItem> {
         val resultsArray = response.optJSONArray("results") ?: JSONArray()
@@ -53,18 +54,26 @@ class TmdbService(context: Context) {
 
         for (index in 0 until resultsArray.length()) {
             val itemJson = resultsArray.optJSONObject(index) ?: continue
+
+            val title = itemJson.optString("title").nullIfBlank()
+            val name = itemJson.optString("name").nullIfBlank()
+            val mediaType = itemJson.optString("media_type").nullIfBlank()
+            val overview = itemJson.optString("overview")
+            val releaseDateText = itemJson.optString("release_date")
+            val firstAirDateText = itemJson.optString("first_air_date")
+            val releaseDate = if (releaseDateText.isBlank()) firstAirDateText else releaseDateText
+            val posterPath = itemJson.optString("poster_path").nullIfBlank()
+
             items.add(
                 TmdbMediaItem(
                     id = itemJson.optInt("id"),
-                    title = itemJson.optString("title").nullIfBlank(),
-                    name = itemJson.optString("name").nullIfBlank(),
-                    mediaType = itemJson.optString("media_type").nullIfBlank(),
-                    overview = itemJson.optString("overview"),
+                    title = title,
+                    name = name,
+                    mediaType = mediaType,
+                    overview = overview,
                     genreIds = parseGenreIds(itemJson.optJSONArray("genre_ids")),
-                    releaseDate = itemJson.optString("release_date")
-                        .ifBlank { itemJson.optString("first_air_date") }
-                        .nullIfBlank(),
-                    posterPath = itemJson.optString("poster_path").nullIfBlank()
+                    releaseDate = releaseDate.nullIfBlank(),
+                    posterPath = posterPath
                 )
             )
         }
@@ -84,7 +93,11 @@ class TmdbService(context: Context) {
 }
 
 private fun String.nullIfBlank(): String? {
-    return takeUnless { it.isBlank() || it == "null" }
+    if (isBlank() || this == "null") {
+        return null
+    }
+
+    return this
 }
 
 private object TmdbServiceDefaults {

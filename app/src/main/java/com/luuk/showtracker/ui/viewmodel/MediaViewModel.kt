@@ -70,19 +70,22 @@ class MediaViewModel(
 
         viewModelScope.launch {
             _isLoading.value = true
-            repository.getTrendingMedia(currentPage)
-                .onSuccess { newItems ->
-                    if (newItems.isEmpty()) {
-                        isLastPage = true
-                    } else {
-                        _mediaItems.value += newItems
-                        currentPage++
-                    }
-                    clearError()
+            val result = repository.getTrendingMedia(currentPage)
+
+            if (result.isSuccess) {
+                val newItems = result.getOrNull().orEmpty()
+                if (newItems.isEmpty()) {
+                    isLastPage = true
+                } else {
+                    _mediaItems.value = _mediaItems.value + newItems
+                    currentPage++
                 }
-                .onFailure { error ->
-                    setError(error)
-                }
+                _errorMessage.value = null
+            } else {
+                val error = result.exceptionOrNull()
+                _errorMessage.value = error?.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+            }
+
             _isLoading.value = false
         }
     }
@@ -92,22 +95,25 @@ class MediaViewModel(
 
         if (query.isBlank()) {
             _searchResults.value = emptyList()
-            clearError()
+            _errorMessage.value = null
             return
         }
 
         searchJob = viewModelScope.launch {
             delay(MediaViewModelDefaults.SEARCH_DEBOUNCE_MS)
             _isLoading.value = true
-            repository.searchMedia(query)
-                .onSuccess { results ->
-                    _searchResults.value = results
-                    clearError()
-                }
-                .onFailure { error ->
-                    _searchResults.value = emptyList()
-                    setError(error)
-                }
+
+            val result = repository.searchMedia(query)
+
+            if (result.isSuccess) {
+                _searchResults.value = result.getOrNull().orEmpty()
+                _errorMessage.value = null
+            } else {
+                val error = result.exceptionOrNull()
+                _searchResults.value = emptyList()
+                _errorMessage.value = error?.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+            }
+
             _isLoading.value = false
         }
     }
@@ -116,12 +122,13 @@ class MediaViewModel(
         val currentSavedItems = _savedItems.value
         val isAlreadySaved = currentSavedItems.any { it.id == item.id }
 
-        _savedItems.value = if (isAlreadySaved) {
-            currentSavedItems.filterNot { it.id == item.id }
+        if (isAlreadySaved) {
+            _savedItems.value = currentSavedItems.filterNot { it.id == item.id }
         } else {
-            listOf(item) + currentSavedItems
+            _savedItems.value = listOf(item) + currentSavedItems
         }
-        saveCurrentSavedItems()
+
+        savedMediaStorage.saveSavedMedia(_savedItems.value)
     }
 
     fun saveProfile(name: String, photoUri: String?) {
@@ -134,10 +141,16 @@ class MediaViewModel(
     }
 
     fun toggleWatched(itemId: Int) {
-        _watchedIds.value = _watchedIds.value.toMutableSet().apply {
-            if (contains(itemId)) remove(itemId) else add(itemId)
+        val updatedWatchedIds = _watchedIds.value.toMutableSet()
+
+        if (updatedWatchedIds.contains(itemId)) {
+            updatedWatchedIds.remove(itemId)
+        } else {
+            updatedWatchedIds.add(itemId)
         }
-        saveCurrentWatchedIds()
+
+        _watchedIds.value = updatedWatchedIds
+        watchedStorage.saveWatchedIds(_watchedIds.value)
     }
 
     fun setWatchlistSortOption(sortOption: WatchlistSortOption) {
@@ -158,23 +171,32 @@ class MediaViewModel(
             rating = rating,
             dateTime = createReviewDateTime()
         )
-        _reviews.value = _reviews.value.toMutableMap().apply {
-            this[itemId] = review
-        }
-        saveCurrentReviews()
+
+        val updatedReviews = _reviews.value.toMutableMap()
+        updatedReviews[itemId] = review
+        _reviews.value = updatedReviews
+        reviewStorage.saveReviews(_reviews.value)
     }
 
     fun deleteReview(itemId: Int) {
-        _reviews.value = _reviews.value.toMutableMap().apply {
-            remove(itemId)
-        }
-        saveCurrentReviews()
+        val updatedReviews = _reviews.value.toMutableMap()
+        updatedReviews.remove(itemId)
+        _reviews.value = updatedReviews
+        reviewStorage.saveReviews(_reviews.value)
     }
 
     fun getMediaItemById(itemId: Int): TmdbMediaItem? {
-        return _savedItems.value.firstOrNull { it.id == itemId }
-            ?: _searchResults.value.firstOrNull { it.id == itemId }
-            ?: _mediaItems.value.firstOrNull { it.id == itemId }
+        val savedItem = _savedItems.value.firstOrNull { it.id == itemId }
+        if (savedItem != null) {
+            return savedItem
+        }
+
+        val searchItem = _searchResults.value.firstOrNull { it.id == itemId }
+        if (searchItem != null) {
+            return searchItem
+        }
+
+        return _mediaItems.value.firstOrNull { it.id == itemId }
     }
 
     fun createFallbackMediaItem(itemId: Int): TmdbMediaItem {
@@ -187,30 +209,9 @@ class MediaViewModel(
         )
     }
 
-    private fun clearError() {
-        _errorMessage.value = null
-    }
-
-    private fun setError(error: Throwable) {
-        _errorMessage.value = error.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
-    }
-
-    private fun saveCurrentSavedItems() {
-        savedMediaStorage.saveSavedMedia(_savedItems.value)
-    }
-
-    private fun saveCurrentWatchedIds() {
-        watchedStorage.saveWatchedIds(_watchedIds.value)
-    }
-
-    private fun saveCurrentReviews() {
-        reviewStorage.saveReviews(_reviews.value)
-    }
-
     private fun createReviewDateTime(): String {
-        return LocalDateTime.now().format(
-            DateTimeFormatter.ofPattern(MediaViewModelDefaults.REVIEW_DATE_TIME_PATTERN)
-        )
+        val formatter = DateTimeFormatter.ofPattern(MediaViewModelDefaults.REVIEW_DATE_TIME_PATTERN)
+        return LocalDateTime.now().format(formatter)
     }
 }
 
