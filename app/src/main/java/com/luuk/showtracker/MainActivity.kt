@@ -14,7 +14,6 @@ import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
 import com.luuk.showtracker.data.local.WatchlistPreferences
 import com.luuk.showtracker.data.local.WatchedStorage
-import com.luuk.showtracker.data.repository.MediaRepository
 import com.luuk.showtracker.ui.navigation.ShowTrackerApp
 import com.luuk.showtracker.ui.theme.ShowTrackerTheme
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
@@ -22,19 +21,19 @@ import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        val repository = MediaRepository(TmdbService(applicationContext))
+        val tmdbService = TmdbService(applicationContext)
         val profileStorage = ProfileStorage(applicationContext)
         val reviewStorage = ReviewStorage(applicationContext)
         val savedMediaStorage = SavedMediaStorage(applicationContext)
         val watchlistPreferences = WatchlistPreferences(applicationContext)
         val watchedStorage = WatchedStorage(applicationContext)
+
         val viewModelFactory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(MediaViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
                     return MediaViewModel(
-                        repository,
+                        tmdbService,
                         profileStorage,
                         reviewStorage,
                         savedMediaStorage,
@@ -42,6 +41,7 @@ class MainActivity : ComponentActivity() {
                         watchedStorage
                     ) as T
                 }
+
                 throw IllegalArgumentException("Unknown ViewModel class")
             }
         }

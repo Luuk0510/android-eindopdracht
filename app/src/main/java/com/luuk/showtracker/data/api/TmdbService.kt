@@ -7,11 +7,11 @@ import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.luuk.showtracker.data.model.TmdbMediaItem
-import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class TmdbService(context: Context) {
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context.applicationContext)
@@ -34,7 +34,7 @@ class TmdbService(context: Context) {
     }
 
     private suspend fun fetchMediaItems(url: String): List<TmdbMediaItem> {
-        return suspendCancellableCoroutine { continuation ->
+        return suspendCoroutine { continuation ->
             val request = JsonObjectRequest(
                 Request.Method.GET,
                 url,
@@ -43,7 +43,6 @@ class TmdbService(context: Context) {
                 { error -> continuation.resumeWithException(error) }
             )
             request.setShouldCache(true)
-            continuation.invokeOnCancellation { request.cancel() }
             requestQueue.add(request)
         }
     }

@@ -1,5 +1,7 @@
 package com.luuk.showtracker.ui.viewmodel
 
+import com.luuk.showtracker.BuildConfig
+import com.luuk.showtracker.data.api.TmdbService
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.luuk.showtracker.data.local.ProfileStorage
@@ -11,7 +13,6 @@ import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.model.UserProfile
 import com.luuk.showtracker.data.model.WatchlistSortOption
-import com.luuk.showtracker.data.repository.MediaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +23,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class MediaViewModel(
-    private val repository: MediaRepository,
+    private val tmdbService: TmdbService,
     private val profileStorage: ProfileStorage,
     private val reviewStorage: ReviewStorage,
     private val savedMediaStorage: SavedMediaStorage,
@@ -71,10 +72,11 @@ class MediaViewModel(
 
         viewModelScope.launch {
             _isLoading.value = true
-            val result = repository.getTrendingMedia(currentPage)
-
-            if (result.isSuccess) {
-                val newItems = result.getOrNull().orEmpty()
+            try {
+                val newItems = tmdbService.getTrending(
+                    apiKey = BuildConfig.TMDB_API_KEY,
+                    page = currentPage
+                )
                 if (newItems.isEmpty()) {
                     isLastPage = true
                 } else {
@@ -82,9 +84,8 @@ class MediaViewModel(
                     currentPage++
                 }
                 _errorMessage.value = null
-            } else {
-                val error = result.exceptionOrNull()
-                _errorMessage.value = error?.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+            } catch (error: Exception) {
+                _errorMessage.value = error.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
             }
 
             _isLoading.value = false
@@ -104,15 +105,15 @@ class MediaViewModel(
             delay(MediaViewModelDefaults.SEARCH_DEBOUNCE_MS)
             _isLoading.value = true
 
-            val result = repository.searchMedia(query)
-
-            if (result.isSuccess) {
-                _searchResults.value = result.getOrNull().orEmpty()
+            try {
+                _searchResults.value = tmdbService.searchMedia(
+                    apiKey = BuildConfig.TMDB_API_KEY,
+                    query = query
+                )
                 _errorMessage.value = null
-            } else {
-                val error = result.exceptionOrNull()
+            } catch (error: Exception) {
                 _searchResults.value = emptyList()
-                _errorMessage.value = error?.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+                _errorMessage.value = error.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
             }
 
             _isLoading.value = false

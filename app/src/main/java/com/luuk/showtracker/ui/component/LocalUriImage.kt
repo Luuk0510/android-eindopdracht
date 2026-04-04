@@ -1,7 +1,7 @@
 package com.luuk.showtracker.ui.component
 
+import android.net.Uri
 import android.graphics.BitmapFactory
-import android.graphics.ImageDecoder
 import androidx.compose.foundation.Image
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,8 +14,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -26,16 +24,16 @@ fun LocalUriImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop
 ) {
-    val context = LocalContext.current
     var bitmap by remember(imageUri) { mutableStateOf<android.graphics.Bitmap?>(null) }
 
     LaunchedEffect(imageUri) {
-        bitmap = loadBitmap(context, imageUri)
+        bitmap = loadBitmap(imageUri)
     }
 
-    if (bitmap != null) {
+    val currentBitmap = bitmap
+    if (currentBitmap != null) {
         Image(
-            bitmap = bitmap.asImageBitmap(),
+            bitmap = currentBitmap.asImageBitmap(),
             contentDescription = contentDescription,
             modifier = modifier,
             contentScale = contentScale
@@ -49,20 +47,14 @@ fun LocalUriImage(
 }
 
 private suspend fun loadBitmap(
-    context: android.content.Context,
     imageUri: String?
 ): android.graphics.Bitmap? {
     if (imageUri.isNullOrBlank()) return null
 
     return withContext(Dispatchers.IO) {
         try {
-            val parsedUri = imageUri.toUri()
-            if (parsedUri.scheme == "file") {
-                BitmapFactory.decodeFile(parsedUri.path)
-            } else {
-                val source = ImageDecoder.createSource(context.contentResolver, parsedUri)
-                ImageDecoder.decodeBitmap(source)
-            }
+            val imagePath = Uri.parse(imageUri).path
+            BitmapFactory.decodeFile(imagePath)
         } catch (_: Exception) {
             null
         }

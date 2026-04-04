@@ -76,12 +76,7 @@ internal fun ProfileDialogHost(
         onProfileNameChange = { editedProfileNameState.value = it },
         onRemovePhotoClick = { editedProfilePhotoUriState.value = null },
         onTakePhotoClick = {
-            val hasCameraPermission = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-
-            if (hasCameraPermission) {
+            if (hasCameraPermission(context)) {
                 cameraPreviewLauncher.launch(null)
             } else {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -203,6 +198,13 @@ private fun ProfileDialog(
             }
         }
     }
+}
+
+private fun hasCameraPermission(context: Context): Boolean {
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.CAMERA
+    ) == PackageManager.PERMISSION_GRANTED
 }
 
 private fun saveProfilePhoto(
