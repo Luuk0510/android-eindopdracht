@@ -78,7 +78,7 @@ class MediaViewModel(
                 if (newItems.isEmpty()) {
                     isLastPage = true
                 } else {
-                    _mediaItems.value = _mediaItems.value + newItems
+                    _mediaItems.value += newItems
                     currentPage++
                 }
                 _errorMessage.value = null

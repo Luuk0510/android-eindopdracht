@@ -29,8 +29,8 @@ fun ReviewCard(
     review: MediaReview,
     profileName: String,
     profilePhotoUri: String?,
-    onEditClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditClick: (() -> Unit)? = null
 ) {
     Surface(
         modifier = modifier,

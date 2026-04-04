@@ -61,7 +61,7 @@ class TmdbService(context: Context) {
             val overview = itemJson.optString("overview")
             val releaseDateText = itemJson.optString("release_date")
             val firstAirDateText = itemJson.optString("first_air_date")
-            val releaseDate = if (releaseDateText.isBlank()) firstAirDateText else releaseDateText
+            val releaseDate = releaseDateText.ifBlank { firstAirDateText }
             val posterPath = itemJson.optString("poster_path").nullIfBlank()
 
             items.add(
