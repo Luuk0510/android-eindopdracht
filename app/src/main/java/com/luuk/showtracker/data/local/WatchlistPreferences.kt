@@ -1,6 +1,7 @@
 package com.luuk.showtracker.data.local
 
 import android.content.Context
+import androidx.core.content.edit
 import com.luuk.showtracker.data.model.WatchlistSortOption
 
 class WatchlistPreferences(context: Context) {
@@ -13,9 +14,9 @@ class WatchlistPreferences(context: Context) {
     }
 
     fun saveSortOption(sortOption: WatchlistSortOption) {
-        sharedPreferences.edit()
-            .putString(WatchlistPreferencesDefaults.SORT_OPTION_KEY, sortOption.storageValue)
-            .apply()
+        sharedPreferences.edit {
+            putString(WatchlistPreferencesDefaults.SORT_OPTION_KEY, sortOption.storageValue)
+        }
     }
 }
 

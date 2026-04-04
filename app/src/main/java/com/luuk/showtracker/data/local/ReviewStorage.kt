@@ -1,6 +1,7 @@
 package com.luuk.showtracker.data.local
 
 import android.content.Context
+import androidx.core.content.edit
 import com.luuk.showtracker.data.model.MediaReview
 import org.json.JSONArray
 import org.json.JSONObject
@@ -11,7 +12,7 @@ class ReviewStorage(context: Context) {
         context.getSharedPreferences("review_storage", Context.MODE_PRIVATE)
 
     fun loadReviews(): Map<Int, MediaReview> {
-        val json = sharedPreferences.getString(ReviewStorageDefaults.ReviewsKey, null) ?: return emptyMap()
+        val json = sharedPreferences.getString(ReviewStorageDefaults.REVIEWS_KEY, null) ?: return emptyMap()
         val reviews = mutableMapOf<Int, MediaReview>()
         val parsedJson = runCatching { JSONTokener(json).nextValue() }.getOrNull() ?: return emptyMap()
 
@@ -46,39 +47,39 @@ class ReviewStorage(context: Context) {
         reviews.values.forEach { review ->
             reviewArray.put(
                 JSONObject().apply {
-                    put(ReviewStorageDefaults.MediaIdField, review.mediaId)
-                    put(ReviewStorageDefaults.TitleField, review.title)
-                    put(ReviewStorageDefaults.ReviewTextField, review.reviewText)
-                    put(ReviewStorageDefaults.RatingField, review.rating)
-                    put(ReviewStorageDefaults.DateTimeField, review.dateTime)
+                    put(ReviewStorageDefaults.MEDIA_ID_FIELD, review.mediaId)
+                    put(ReviewStorageDefaults.TITLE_FIELD, review.title)
+                    put(ReviewStorageDefaults.REVIEW_TEXT_FIELD, review.reviewText)
+                    put(ReviewStorageDefaults.RATING_FIELD, review.rating)
+                    put(ReviewStorageDefaults.DATE_TIME_FIELD, review.dateTime)
                 }
             )
         }
 
-        sharedPreferences.edit()
-            .putString(ReviewStorageDefaults.ReviewsKey, reviewArray.toString())
-            .apply()
+        sharedPreferences.edit {
+            putString(ReviewStorageDefaults.REVIEWS_KEY, reviewArray.toString())
+        }
     }
 
     private fun parseReview(reviewObject: JSONObject): MediaReview? {
-        val mediaId = reviewObject.optInt(ReviewStorageDefaults.MediaIdField)
+        val mediaId = reviewObject.optInt(ReviewStorageDefaults.MEDIA_ID_FIELD)
         if (mediaId == 0) return null
 
         return MediaReview(
             mediaId = mediaId,
-            title = reviewObject.optString(ReviewStorageDefaults.TitleField),
-            reviewText = reviewObject.optString(ReviewStorageDefaults.ReviewTextField),
-            rating = reviewObject.optInt(ReviewStorageDefaults.RatingField),
-            dateTime = reviewObject.optString(ReviewStorageDefaults.DateTimeField)
+            title = reviewObject.optString(ReviewStorageDefaults.TITLE_FIELD),
+            reviewText = reviewObject.optString(ReviewStorageDefaults.REVIEW_TEXT_FIELD),
+            rating = reviewObject.optInt(ReviewStorageDefaults.RATING_FIELD),
+            dateTime = reviewObject.optString(ReviewStorageDefaults.DATE_TIME_FIELD)
         )
     }
 }
 
 private object ReviewStorageDefaults {
-    const val ReviewsKey = "reviews_json"
-    const val MediaIdField = "mediaId"
-    const val TitleField = "title"
-    const val ReviewTextField = "reviewText"
-    const val RatingField = "rating"
-    const val DateTimeField = "dateTime"
+    const val REVIEWS_KEY = "reviews_json"
+    const val MEDIA_ID_FIELD = "mediaId"
+    const val TITLE_FIELD = "title"
+    const val REVIEW_TEXT_FIELD = "reviewText"
+    const val RATING_FIELD = "rating"
+    const val DATE_TIME_FIELD = "dateTime"
 }

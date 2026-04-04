@@ -8,9 +8,12 @@
     <string name="topbar_sort_watchlist">Sort watchlist</string>
 
     <string name="profile_edit_title">Edit profile</string>
-    <string name="profile_guest">Guest</string>
+    <string name="profile_user">User</string>
     <string name="profile_gallery">Gallery</string>
     <string name="profile_camera">Camera</string>
+    <string name="profile_photo_label">Profile photo</string>
+    <string name="profile_change_photo">Change profile photo</string>
+    <string name="profile_remove_photo">Remove photo</string>
     <string name="profile_name_label">Profile name</string>
     <string name="profile_save">Save profile</string>
     <string name="content_close">Close</string>

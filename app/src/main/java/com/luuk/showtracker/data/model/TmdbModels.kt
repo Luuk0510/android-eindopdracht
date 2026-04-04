@@ -1,9 +1,5 @@
 package com.luuk.showtracker.data.model
 
-data class TmdbResponse(
-    val results: List<TmdbMediaItem>
-)
-
 data class TmdbMediaItem(
     val id: Int,
     val title: String?,

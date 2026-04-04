@@ -144,7 +144,7 @@ private fun WatchlistGrid(
 
 private object SavedMediaScreenDefaults {
     const val PORTRAIT_COLUMN_COUNT = 2
-    const val LANDSCAPE_COLUMN_COUNT = 3
+    const val LANDSCAPE_COLUMN_COUNT = 4
 
     val GridOuterPadding = 4.dp
     val GridSpacing = 16.dp
