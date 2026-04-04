@@ -20,7 +20,7 @@ class TmdbService(context: Context) {
         apiKey: String,
         page: Int
     ): List<TmdbMediaItem> {
-        val url = "${TmdbServiceDefaults.BASE_URL}trending/all/day?api_key=$apiKey&page=$page"
+        val url = "${BASE_URL}trending/all/day?api_key=$apiKey&page=$page"
         return fetchMediaItems(url)
     }
 
@@ -29,7 +29,7 @@ class TmdbService(context: Context) {
         query: String
     ): List<TmdbMediaItem> {
         val encodedQuery = Uri.encode(query)
-        val url = "${TmdbServiceDefaults.BASE_URL}search/multi?api_key=$apiKey&query=$encodedQuery"
+        val url = "${BASE_URL}search/multi?api_key=$apiKey&query=$encodedQuery"
         return fetchMediaItems(url)
     }
 
@@ -99,6 +99,4 @@ private fun String.nullIfBlank(): String? {
     return this
 }
 
-private object TmdbServiceDefaults {
-    const val BASE_URL = "https://api.themoviedb.org/3/"
-}
+private const val BASE_URL = "https://api.themoviedb.org/3/"

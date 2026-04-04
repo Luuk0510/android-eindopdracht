@@ -21,6 +21,21 @@ import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val viewModelFactory = createMediaViewModelFactory()
+
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
+        setContent {
+            ShowTrackerTheme {
+                val mediaViewModel: MediaViewModel = viewModel(factory = viewModelFactory)
+                ShowTrackerApp(viewModel = mediaViewModel)
+            }
+        }
+    }
+
+    private fun createMediaViewModelFactory(): ViewModelProvider.Factory {
         val tmdbService = TmdbService(applicationContext)
         val profileStorage = ProfileStorage(applicationContext)
         val reviewStorage = ReviewStorage(applicationContext)
@@ -28,7 +43,7 @@ class MainActivity : ComponentActivity() {
         val watchlistPreferences = WatchlistPreferences(applicationContext)
         val watchedStorage = WatchedStorage(applicationContext)
 
-        val viewModelFactory = object : ViewModelProvider.Factory {
+        return object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(MediaViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
@@ -43,17 +58,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 throw IllegalArgumentException("Unknown ViewModel class")
-            }
-        }
-
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-        )
-        setContent {
-            ShowTrackerTheme {
-                val mediaViewModel: MediaViewModel = viewModel(factory = viewModelFactory)
-                ShowTrackerApp(viewModel = mediaViewModel)
             }
         }
     }
