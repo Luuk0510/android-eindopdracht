@@ -1,19 +1,15 @@
 package com.luuk.showtracker.data.api
 
 import android.content.Context
+import android.net.Uri
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.luuk.showtracker.data.model.TmdbMediaItem
-import com.luuk.showtracker.data.model.TmdbResponse
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -23,65 +19,66 @@ class TmdbService(context: Context) {
     suspend fun getTrending(
         apiKey: String,
         page: Int
-    ): TmdbResponse {
-        val url = "${TmdbServiceDefaults.BASEURL}trending/all/day?api_key=$apiKey&page=$page"
-        return fetchResponse(url)
+    ): List<TmdbMediaItem> {
+        val url = "${TmdbServiceDefaults.BASE_URL}trending/all/day?api_key=$apiKey&page=$page"
+        return fetchMediaItems(url)
     }
 
     suspend fun searchMedia(
         apiKey: String,
         query: String
-    ): TmdbResponse {
-        val encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
-        val url = "${TmdbServiceDefaults.BASEURL}search/multi?api_key=$apiKey&query=$encodedQuery"
-        return fetchResponse(url)
+    ): List<TmdbMediaItem> {
+        val encodedQuery = Uri.encode(query)
+        val url = "${TmdbServiceDefaults.BASE_URL}search/multi?api_key=$apiKey&query=$encodedQuery"
+        return fetchMediaItems(url)
     }
 
-    private suspend fun fetchResponse(url: String): TmdbResponse =
-        withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                val request = JsonObjectRequest(
-                    Request.Method.GET,
-                    url,
-                    null,
-                    { response ->
-                        continuation.resume(parseResponse(response))
-                    },
-                    { error ->
-                        continuation.resumeWithException(error)
-                    }
-                )
-                request.setShouldCache(true)
-                continuation.invokeOnCancellation { request.cancel() }
-                requestQueue.add(request)
-            }
+    private suspend fun fetchMediaItems(url: String): List<TmdbMediaItem> {
+        return suspendCancellableCoroutine { continuation ->
+            val request = JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                { response -> continuation.resume(parseMediaItems(response)) },
+                { error -> continuation.resumeWithException(error) }
+            )
+            request.setShouldCache(true)
+            continuation.invokeOnCancellation { request.cancel() }
+            requestQueue.add(request)
         }
+    }
 
-    private fun parseResponse(response: JSONObject): TmdbResponse {
+    private fun parseMediaItems(response: JSONObject): List<TmdbMediaItem> {
         val resultsArray = response.optJSONArray("results") ?: JSONArray()
         val items = mutableListOf<TmdbMediaItem>()
 
         for (index in 0 until resultsArray.length()) {
-            val itemObject = resultsArray.optJSONObject(index) ?: continue
-            items.add(parseMediaItem(itemObject))
+            val itemJson = resultsArray.optJSONObject(index) ?: continue
+
+            val title = itemJson.optString("title").nullIfBlank()
+            val name = itemJson.optString("name").nullIfBlank()
+            val mediaType = itemJson.optString("media_type").nullIfBlank()
+            val overview = itemJson.optString("overview")
+            val releaseDateText = itemJson.optString("release_date")
+            val firstAirDateText = itemJson.optString("first_air_date")
+            val releaseDate = if (releaseDateText.isBlank()) firstAirDateText else releaseDateText
+            val posterPath = itemJson.optString("poster_path").nullIfBlank()
+
+            items.add(
+                TmdbMediaItem(
+                    id = itemJson.optInt("id"),
+                    title = title,
+                    name = name,
+                    mediaType = mediaType,
+                    overview = overview,
+                    genreIds = parseGenreIds(itemJson.optJSONArray("genre_ids")),
+                    releaseDate = releaseDate.nullIfBlank(),
+                    posterPath = posterPath
+                )
+            )
         }
 
-        return TmdbResponse(results = items)
-    }
-
-    private fun parseMediaItem(itemObject: JSONObject): TmdbMediaItem {
-        return TmdbMediaItem(
-            id = itemObject.optInt("id"),
-            title = itemObject.optString("title").nullIfBlank(),
-            name = itemObject.optString("name").nullIfBlank(),
-            mediaType = itemObject.optString("media_type").nullIfBlank(),
-            overview = itemObject.optString("overview"),
-            genreIds = parseGenreIds(itemObject.optJSONArray("genre_ids")),
-            releaseDate = itemObject.optString("release_date")
-                .ifBlank { itemObject.optString("first_air_date") }
-                .nullIfBlank(),
-            posterPath = itemObject.optString("poster_path").nullIfBlank()
-        )
+        return items
     }
 
     private fun parseGenreIds(genreArray: JSONArray?): List<Int> {
@@ -96,9 +93,13 @@ class TmdbService(context: Context) {
 }
 
 private fun String.nullIfBlank(): String? {
-    return takeUnless { it.isBlank() || it == "null" }
+    if (isBlank() || this == "null") {
+        return null
+    }
+
+    return this
 }
 
 private object TmdbServiceDefaults {
-    const val BASEURL = "https://api.themoviedb.org/3/"
+    const val BASE_URL = "https://api.themoviedb.org/3/"
 }

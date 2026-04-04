@@ -60,6 +60,7 @@ class MediaViewModel(
     private var currentPage = 1
     private var isLastPage = false
     private var searchJob: Job? = null
+    private var selectedMediaItem: TmdbMediaItem? = null
 
     init {
         loadNextPage()
@@ -70,19 +71,22 @@ class MediaViewModel(
 
         viewModelScope.launch {
             _isLoading.value = true
-            repository.getTrendingMedia(currentPage)
-                .onSuccess { newItems ->
-                    if (newItems.isEmpty()) {
-                        isLastPage = true
-                    } else {
-                        _mediaItems.value += newItems
-                        currentPage++
-                    }
-                    _errorMessage.value = null
+            val result = repository.getTrendingMedia(currentPage)
+
+            if (result.isSuccess) {
+                val newItems = result.getOrNull().orEmpty()
+                if (newItems.isEmpty()) {
+                    isLastPage = true
+                } else {
+                    _mediaItems.value = _mediaItems.value + newItems
+                    currentPage++
                 }
-                .onFailure { error ->
-                    _errorMessage.value = error.message ?: "Unknown error occurred"
-                }
+                _errorMessage.value = null
+            } else {
+                val error = result.exceptionOrNull()
+                _errorMessage.value = error?.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+            }
+
             _isLoading.value = false
         }
     }
@@ -97,17 +101,20 @@ class MediaViewModel(
         }
 
         searchJob = viewModelScope.launch {
-            delay(300)
+            delay(MediaViewModelDefaults.SEARCH_DEBOUNCE_MS)
             _isLoading.value = true
-            repository.searchMedia(query)
-                .onSuccess { results ->
-                    _searchResults.value = results
-                    _errorMessage.value = null
-                }
-                .onFailure { error ->
-                    _searchResults.value = emptyList()
-                    _errorMessage.value = error.message ?: "Unknown error occurred"
-                }
+
+            val result = repository.searchMedia(query)
+
+            if (result.isSuccess) {
+                _searchResults.value = result.getOrNull().orEmpty()
+                _errorMessage.value = null
+            } else {
+                val error = result.exceptionOrNull()
+                _searchResults.value = emptyList()
+                _errorMessage.value = error?.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+            }
+
             _isLoading.value = false
         }
     }
@@ -116,11 +123,12 @@ class MediaViewModel(
         val currentSavedItems = _savedItems.value
         val isAlreadySaved = currentSavedItems.any { it.id == item.id }
 
-        _savedItems.value = if (isAlreadySaved) {
-            currentSavedItems.filterNot { it.id == item.id }
+        if (isAlreadySaved) {
+            _savedItems.value = currentSavedItems.filterNot { it.id == item.id }
         } else {
-            listOf(item) + currentSavedItems
+            _savedItems.value = listOf(item) + currentSavedItems
         }
+
         savedMediaStorage.saveSavedMedia(_savedItems.value)
     }
 
@@ -134,9 +142,15 @@ class MediaViewModel(
     }
 
     fun toggleWatched(itemId: Int) {
-        _watchedIds.value = _watchedIds.value.toMutableSet().apply {
-            if (contains(itemId)) remove(itemId) else add(itemId)
+        val updatedWatchedIds = _watchedIds.value.toMutableSet()
+
+        if (updatedWatchedIds.contains(itemId)) {
+            updatedWatchedIds.remove(itemId)
+        } else {
+            updatedWatchedIds.add(itemId)
         }
+
+        _watchedIds.value = updatedWatchedIds
         watchedStorage.saveWatchedIds(_watchedIds.value)
     }
 
@@ -156,22 +170,63 @@ class MediaViewModel(
             title = title,
             reviewText = reviewText,
             rating = rating,
-            dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
+            dateTime = createReviewDateTime()
         )
-        _reviews.value = _reviews.value.toMutableMap().apply {
-            this[itemId] = review
-        }
+
+        val updatedReviews = _reviews.value.toMutableMap()
+        updatedReviews[itemId] = review
+        _reviews.value = updatedReviews
         reviewStorage.saveReviews(_reviews.value)
     }
 
     fun deleteReview(itemId: Int) {
-        _reviews.value = _reviews.value.toMutableMap().apply {
-            remove(itemId)
-        }
+        val updatedReviews = _reviews.value.toMutableMap()
+        updatedReviews.remove(itemId)
+        _reviews.value = updatedReviews
         reviewStorage.saveReviews(_reviews.value)
+    }
+
+    fun selectMediaItem(item: TmdbMediaItem) {
+        selectedMediaItem = item
+    }
+
+    fun getMediaItemById(itemId: Int): TmdbMediaItem? {
+        if (selectedMediaItem?.id == itemId) {
+            return selectedMediaItem
+        }
+
+        val savedItem = _savedItems.value.firstOrNull { it.id == itemId }
+        if (savedItem != null) {
+            return savedItem
+        }
+
+        val searchItem = _searchResults.value.firstOrNull { it.id == itemId }
+        if (searchItem != null) {
+            return searchItem
+        }
+
+        return _mediaItems.value.firstOrNull { it.id == itemId }
+    }
+
+    fun createFallbackMediaItem(itemId: Int): TmdbMediaItem {
+        return TmdbMediaItem(
+            id = itemId,
+            title = "",
+            name = null,
+            overview = "",
+            posterPath = null
+        )
+    }
+
+    private fun createReviewDateTime(): String {
+        val formatter = DateTimeFormatter.ofPattern(MediaViewModelDefaults.REVIEW_DATE_TIME_PATTERN)
+        return LocalDateTime.now().format(formatter)
     }
 }
 
 private object MediaViewModelDefaults {
-    const val DEFAULT_PROFILE_NAME = "Guest"
+    const val DEFAULT_PROFILE_NAME = "User"
+    const val UNKNOWN_ERROR_MESSAGE = "Unknown error occurred"
+    const val REVIEW_DATE_TIME_PATTERN = "dd-MM-yyyy HH:mm"
+    const val SEARCH_DEBOUNCE_MS = 300L
 }
