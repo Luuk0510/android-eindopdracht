@@ -6,7 +6,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -23,11 +27,12 @@ fun LocalUriImage(
     contentScale: ContentScale = ContentScale.Crop
 ) {
     val context = LocalContext.current
-    val bitmapState = produceState<android.graphics.Bitmap?>(initialValue = null, imageUri) {
-        value = loadBitmap(context, imageUri)
+    var bitmap by remember(imageUri) { mutableStateOf<android.graphics.Bitmap?>(null) }
+
+    LaunchedEffect(imageUri) {
+        bitmap = loadBitmap(context, imageUri)
     }
 
-    val bitmap = bitmapState.value
     if (bitmap != null) {
         Image(
             bitmap = bitmap.asImageBitmap(),

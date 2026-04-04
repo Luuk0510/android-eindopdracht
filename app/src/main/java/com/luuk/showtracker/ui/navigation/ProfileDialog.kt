@@ -209,11 +209,13 @@ private fun saveProfilePhoto(
     context: Context,
     bitmap: Bitmap
 ): String? {
-    return runCatching {
+    return try {
         val photoFile = File(context.filesDir, AppNavigationDefaults.PROFILE_PHOTO_FILE_NAME)
         FileOutputStream(photoFile).use { outputStream ->
             bitmap.compress(Bitmap.CompressFormat.JPEG, AppNavigationDefaults.PROFILE_PHOTO_QUALITY, outputStream)
         }
         Uri.fromFile(photoFile).toString()
-    }.getOrNull()
+    } catch (_: Exception) {
+        null
+    }
 }

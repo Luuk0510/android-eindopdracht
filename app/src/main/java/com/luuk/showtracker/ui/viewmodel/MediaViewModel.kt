@@ -208,16 +208,6 @@ class MediaViewModel(
         return _mediaItems.value.firstOrNull { it.id == itemId }
     }
 
-    fun createFallbackMediaItem(itemId: Int): TmdbMediaItem {
-        return TmdbMediaItem(
-            id = itemId,
-            title = "",
-            name = null,
-            overview = "",
-            posterPath = null
-        )
-    }
-
     private fun createReviewDateTime(): String {
         val formatter = DateTimeFormatter.ofPattern(MediaViewModelDefaults.REVIEW_DATE_TIME_PATTERN)
         return LocalDateTime.now().format(formatter)
