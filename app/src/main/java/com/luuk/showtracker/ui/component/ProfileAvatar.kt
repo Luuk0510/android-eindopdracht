@@ -33,8 +33,14 @@ fun ProfileAvatar(
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center
         ) {
+            val profileLetter = if (name.isNotBlank()) {
+                name.first().uppercase()
+            } else {
+                "?"
+            }
+
             Text(
-                text = name.firstOrNull()?.uppercase() ?: "?",
+                text = profileLetter,
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold

@@ -1,15 +1,18 @@
 package com.luuk.showtracker.ui.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -27,10 +30,7 @@ import com.luuk.showtracker.ui.screen.TrendingMediaScreen
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
-fun ShowTrackerApp(
-    viewModel: MediaViewModel,
-    modifier: Modifier = Modifier
-) {
+fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     val profile by viewModel.profile.collectAsState()
     val watchlistSortOption by viewModel.watchlistSortOption.collectAsState()
     val navController = rememberNavController()
@@ -180,7 +180,20 @@ fun SetupAppNavigation(
             val watchedIds by viewModel.watchedIds.collectAsState()
             val itemId = backStackEntry.arguments?.getInt("id") ?: 0
             val mediaItem = viewModel.getMediaItemById(itemId)
-                ?: viewModel.createFallbackMediaItem(itemId)
+
+            if (mediaItem == null) {
+                LaunchedEffect(itemId) {
+                    navController.popBackStack()
+                }
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
 
             MediaDetailScreen(
                 title = mediaItem.title ?: mediaItem.name.orEmpty(),
@@ -205,9 +218,6 @@ fun SetupAppNavigation(
     }
 }
 
-private fun navigateToDetails(
-    navController: NavHostController,
-    itemId: Int
-) {
+private fun navigateToDetails(navController: NavHostController, itemId: Int) {
     navController.navigate(Screen.Details.createRoute(itemId))
 }

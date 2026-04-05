@@ -18,25 +18,29 @@ class SavedMediaStorage(context: Context) {
 
         for (index in 0 until savedMediaArray.length()) {
             val itemObject = savedMediaArray.optJSONObject(index) ?: continue
+            var mediaType = itemObject.optString(SavedMediaStorageDefaults.MEDIA_TYPE_FIELD)
+            if (mediaType.isBlank()) {
+                mediaType = itemObject.optString(SavedMediaStorageDefaults.LEGACY_MEDIA_TYPE_FIELD)
+            }
+
+            var posterPath = itemObject.optString(SavedMediaStorageDefaults.POSTER_PATH_FIELD)
+            if (posterPath.isBlank()) {
+                posterPath = itemObject.optString(SavedMediaStorageDefaults.LEGACY_POSTER_PATH_FIELD)
+            }
+
             savedMedia.add(
                 TmdbMediaItem(
                     id = itemObject.optInt(SavedMediaStorageDefaults.ID_FIELD),
                     title = itemObject.optString(SavedMediaStorageDefaults.TITLE_FIELD).nullIfBlank(),
                     name = itemObject.optString(SavedMediaStorageDefaults.NAME_FIELD).nullIfBlank(),
-                    mediaType = itemObject
-                        .optString(SavedMediaStorageDefaults.MEDIA_TYPE_FIELD)
-                        .ifBlank { itemObject.optString(SavedMediaStorageDefaults.LEGACY_MEDIA_TYPE_FIELD) }
-                        .nullIfBlank(),
+                    mediaType = mediaType.nullIfBlank(),
                     overview = itemObject.optString(SavedMediaStorageDefaults.OVERVIEW_FIELD),
                     genreIds = parseGenreIds(
                         itemObject.optJSONArray(SavedMediaStorageDefaults.GENRE_IDS_FIELD)
                             ?: itemObject.optJSONArray(SavedMediaStorageDefaults.LEGACY_GENRE_IDS_FIELD)
                     ),
                     releaseDate = itemObject.optString(SavedMediaStorageDefaults.RELEASE_DATE_FIELD).nullIfBlank(),
-                    posterPath = itemObject
-                        .optString(SavedMediaStorageDefaults.POSTER_PATH_FIELD)
-                        .ifBlank { itemObject.optString(SavedMediaStorageDefaults.LEGACY_POSTER_PATH_FIELD) }
-                        .nullIfBlank()
+                    posterPath = posterPath.nullIfBlank()
                 )
             )
         }
@@ -48,18 +52,16 @@ class SavedMediaStorage(context: Context) {
         val savedMediaArray = JSONArray()
 
         savedMedia.forEach { item ->
-            savedMediaArray.put(
-                JSONObject().apply {
-                    put(SavedMediaStorageDefaults.ID_FIELD, item.id)
-                    put(SavedMediaStorageDefaults.TITLE_FIELD, item.title)
-                    put(SavedMediaStorageDefaults.NAME_FIELD, item.name)
-                    put(SavedMediaStorageDefaults.MEDIA_TYPE_FIELD, item.mediaType)
-                    put(SavedMediaStorageDefaults.OVERVIEW_FIELD, item.overview)
-                    put(SavedMediaStorageDefaults.GENRE_IDS_FIELD, JSONArray(item.genreIds))
-                    put(SavedMediaStorageDefaults.RELEASE_DATE_FIELD, item.releaseDate)
-                    put(SavedMediaStorageDefaults.POSTER_PATH_FIELD, item.posterPath)
-                }
-            )
+            val itemObject = JSONObject()
+            itemObject.put(SavedMediaStorageDefaults.ID_FIELD, item.id)
+            itemObject.put(SavedMediaStorageDefaults.TITLE_FIELD, item.title)
+            itemObject.put(SavedMediaStorageDefaults.NAME_FIELD, item.name)
+            itemObject.put(SavedMediaStorageDefaults.MEDIA_TYPE_FIELD, item.mediaType)
+            itemObject.put(SavedMediaStorageDefaults.OVERVIEW_FIELD, item.overview)
+            itemObject.put(SavedMediaStorageDefaults.GENRE_IDS_FIELD, JSONArray(item.genreIds))
+            itemObject.put(SavedMediaStorageDefaults.RELEASE_DATE_FIELD, item.releaseDate)
+            itemObject.put(SavedMediaStorageDefaults.POSTER_PATH_FIELD, item.posterPath)
+            savedMediaArray.put(itemObject)
         }
 
         sharedPreferences.edit {
@@ -79,7 +81,11 @@ private fun parseGenreIds(genreArray: JSONArray?): List<Int> {
 }
 
 private fun String.nullIfBlank(): String? {
-    return takeUnless { it.isBlank() || it == "null" }
+    if (isBlank() || this == "null") {
+        return null
+    }
+
+    return this
 }
 
 private object SavedMediaStorageDefaults {
