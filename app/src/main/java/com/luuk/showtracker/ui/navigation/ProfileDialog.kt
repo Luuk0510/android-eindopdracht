@@ -51,14 +51,14 @@ internal fun ProfileDialogHost(
     if (!showProfileDialog) return
 
     val context = LocalContext.current
-    val editedProfileNameState = remember(profileName) { mutableStateOf(profileName) }
-    val editedProfilePhotoUriState = remember(profilePhotoUri) { mutableStateOf(profilePhotoUri) }
+    val profileNameState = remember(profileName) { mutableStateOf(profileName) }
+    val profilePhotoState = remember(profilePhotoUri) { mutableStateOf(profilePhotoUri) }
 
     val cameraPreviewLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         if (bitmap != null) {
-            editedProfilePhotoUriState.value = saveProfilePhoto(context, bitmap)
+            profilePhotoState.value = saveProfilePhoto(context, bitmap)
         }
     }
 
@@ -71,24 +71,19 @@ internal fun ProfileDialogHost(
     }
 
     ProfileDialog(
-        profileName = editedProfileNameState.value,
-        profilePhotoUri = editedProfilePhotoUriState.value,
-        onProfileNameChange = { editedProfileNameState.value = it },
-        onRemovePhotoClick = { editedProfilePhotoUriState.value = null },
+        profileName = profileNameState.value,
+        profilePhotoUri = profilePhotoState.value,
+        onProfileNameChange = { profileNameState.value = it },
+        onRemovePhotoClick = { profilePhotoState.value = null },
         onTakePhotoClick = {
-            val hasCameraPermission = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-
-            if (hasCameraPermission) {
+            if (hasCameraPermission(context)) {
                 cameraPreviewLauncher.launch(null)
             } else {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
         },
         onDismiss = onDismiss,
-        onSave = { onSave(editedProfileNameState.value.trim(), editedProfilePhotoUriState.value) }
+        onSave = { onSave(profileNameState.value.trim(), profilePhotoState.value) }
     )
 }
 
@@ -205,15 +200,21 @@ private fun ProfileDialog(
     }
 }
 
-private fun saveProfilePhoto(
-    context: Context,
-    bitmap: Bitmap
-): String? {
-    return runCatching {
+private fun hasCameraPermission(context: Context): Boolean {
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.CAMERA
+    ) == PackageManager.PERMISSION_GRANTED
+}
+
+private fun saveProfilePhoto(context: Context, bitmap: Bitmap): String? {
+    return try {
         val photoFile = File(context.filesDir, AppNavigationDefaults.PROFILE_PHOTO_FILE_NAME)
         FileOutputStream(photoFile).use { outputStream ->
             bitmap.compress(Bitmap.CompressFormat.JPEG, AppNavigationDefaults.PROFILE_PHOTO_QUALITY, outputStream)
         }
         Uri.fromFile(photoFile).toString()
-    }.getOrNull()
+    } catch (_: Exception) {
+        null
+    }
 }

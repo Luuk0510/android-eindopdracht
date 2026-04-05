@@ -16,20 +16,14 @@ import kotlin.coroutines.resumeWithException
 class TmdbService(context: Context) {
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context.applicationContext)
 
-    suspend fun getTrending(
-        apiKey: String,
-        page: Int
-    ): List<TmdbMediaItem> {
-        val url = "${TmdbServiceDefaults.BASE_URL}trending/all/day?api_key=$apiKey&page=$page"
+    suspend fun getTrending(apiKey: String, page: Int): List<TmdbMediaItem> {
+        val url = "${BASE_URL}trending/all/day?api_key=$apiKey&page=$page"
         return fetchMediaItems(url)
     }
 
-    suspend fun searchMedia(
-        apiKey: String,
-        query: String
-    ): List<TmdbMediaItem> {
+    suspend fun searchMedia(apiKey: String, query: String): List<TmdbMediaItem> {
         val encodedQuery = Uri.encode(query)
-        val url = "${TmdbServiceDefaults.BASE_URL}search/multi?api_key=$apiKey&query=$encodedQuery"
+        val url = "${BASE_URL}search/multi?api_key=$apiKey&query=$encodedQuery"
         return fetchMediaItems(url)
     }
 
@@ -61,7 +55,7 @@ class TmdbService(context: Context) {
             val overview = itemJson.optString("overview")
             val releaseDateText = itemJson.optString("release_date")
             val firstAirDateText = itemJson.optString("first_air_date")
-            val releaseDate = if (releaseDateText.isBlank()) firstAirDateText else releaseDateText
+            val releaseDate = releaseDateText.ifBlank { firstAirDateText }
             val posterPath = itemJson.optString("poster_path").nullIfBlank()
 
             items.add(
@@ -100,6 +94,6 @@ private fun String.nullIfBlank(): String? {
     return this
 }
 
-private object TmdbServiceDefaults {
-    const val BASE_URL = "https://api.themoviedb.org/3/"
-}
+private const val BASE_URL = "https://api.themoviedb.org/3/"
+
+
