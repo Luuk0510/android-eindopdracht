@@ -149,10 +149,7 @@ fun ReviewDialogContent(
 }
 
 @Composable
-private fun ReviewDialogHeader(
-    title: String,
-    onDismiss: () -> Unit
-) {
+private fun ReviewDialogHeader(title: String, onDismiss: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically

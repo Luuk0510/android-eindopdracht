@@ -30,10 +30,7 @@ import com.luuk.showtracker.ui.screen.TrendingMediaScreen
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
-fun ShowTrackerApp(
-    viewModel: MediaViewModel,
-    modifier: Modifier = Modifier
-) {
+fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     val profile by viewModel.profile.collectAsState()
     val watchlistSortOption by viewModel.watchlistSortOption.collectAsState()
     val navController = rememberNavController()
@@ -221,9 +218,6 @@ fun SetupAppNavigation(
     }
 }
 
-private fun navigateToDetails(
-    navController: NavHostController,
-    itemId: Int
-) {
+private fun navigateToDetails(navController: NavHostController, itemId: Int) {
     navController.navigate(Screen.Details.createRoute(itemId))
 }

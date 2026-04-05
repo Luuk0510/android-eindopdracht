@@ -323,10 +323,7 @@ private fun DetailContentSection(
 }
 
 @Composable
-private fun WatchedButton(
-    isWatched: Boolean,
-    onWatchedToggle: () -> Unit
-) {
+private fun WatchedButton(isWatched: Boolean, onWatchedToggle: () -> Unit) {
     OutlinedButton(
         onClick = onWatchedToggle,
         modifier = Modifier.height(CompactPrimaryButtonDefaults.Height),
@@ -388,7 +385,9 @@ private object MediaDetailScreenDefaults {
 }
 
 private fun String.toDisplayDate(): String {
-    return runCatching {
+    return try {
         LocalDate.parse(this).format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-    }.getOrDefault(this)
+    } catch (_: Exception) {
+        this
+    }
 }

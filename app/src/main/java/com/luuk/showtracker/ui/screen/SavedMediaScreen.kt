@@ -97,10 +97,7 @@ private fun SavedMediaContent(
 }
 
 @Composable
-private fun WatchlistMessage(
-    text: String,
-    modifier: Modifier = Modifier
-) {
+private fun WatchlistMessage(text: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -151,9 +148,7 @@ private object SavedMediaScreenDefaults {
     val ScreenPadding = 16.dp
 }
 
-private fun List<TmdbMediaItem>.sortedForWatchlist(
-    sortOption: WatchlistSortOption
-): List<TmdbMediaItem> {
+private fun List<TmdbMediaItem>.sortedForWatchlist(sortOption: WatchlistSortOption): List<TmdbMediaItem> {
     return when (sortOption) {
         WatchlistSortOption.NEWEST -> this
         WatchlistSortOption.OLDEST -> this.asReversed()

@@ -22,7 +22,11 @@ fun TmdbPosterImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop
 ) {
-    val imageUrl = posterPath?.let { "${TmdbPosterImageDefaults.BASE_IMAGE_URL}$imageWidth$it" }
+    val imageUrl = if (posterPath != null) {
+        "$BASE_IMAGE_URL$imageWidth$posterPath"
+    } else {
+        null
+    }
     val bitmapState = produceState<Bitmap?>(initialValue = null, imageUrl) {
         value = loadBitmap(imageUrl)
     }
@@ -47,12 +51,12 @@ private suspend fun loadBitmap(imageUrl: String?): Bitmap? {
     if (imageUrl.isNullOrBlank()) return null
 
     return withContext(Dispatchers.IO) {
-        runCatching {
+        try {
             URL(imageUrl).openStream().use(BitmapFactory::decodeStream)
-        }.getOrNull()
+        } catch (_: Exception) {
+            null
+        }
     }
 }
 
-private object TmdbPosterImageDefaults {
-    const val BASE_IMAGE_URL = "https://image.tmdb.org/t/p/"
-}
+private const val BASE_IMAGE_URL = "https://image.tmdb.org/t/p/"

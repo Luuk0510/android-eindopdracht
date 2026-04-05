@@ -85,7 +85,7 @@ class MediaViewModel(
                 }
                 _errorMessage.value = null
             } catch (error: Exception) {
-                _errorMessage.value = error.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+                _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
             }
 
             _isLoading.value = false
@@ -102,7 +102,7 @@ class MediaViewModel(
         }
 
         searchJob = viewModelScope.launch {
-            delay(MediaViewModelDefaults.SEARCH_DEBOUNCE_MS)
+            delay(SEARCH_DEBOUNCE_MS)
             _isLoading.value = true
 
             try {
@@ -113,7 +113,7 @@ class MediaViewModel(
                 _errorMessage.value = null
             } catch (error: Exception) {
                 _searchResults.value = emptyList()
-                _errorMessage.value = error.message ?: MediaViewModelDefaults.UNKNOWN_ERROR_MESSAGE
+                _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
             }
 
             _isLoading.value = false
@@ -135,7 +135,7 @@ class MediaViewModel(
 
     fun saveProfile(name: String, photoUri: String?) {
         val updatedProfile = UserProfile(
-            name = name.ifBlank { MediaViewModelDefaults.DEFAULT_PROFILE_NAME },
+            name = name.ifBlank { DEFAULT_PROFILE_NAME },
             photoUri = photoUri
         )
         _profile.value = updatedProfile
@@ -210,14 +210,12 @@ class MediaViewModel(
     }
 
     private fun createReviewDateTime(): String {
-        val formatter = DateTimeFormatter.ofPattern(MediaViewModelDefaults.REVIEW_DATE_TIME_PATTERN)
+        val formatter = DateTimeFormatter.ofPattern(REVIEW_DATE_TIME_PATTERN)
         return LocalDateTime.now().format(formatter)
     }
 }
 
-private object MediaViewModelDefaults {
-    const val DEFAULT_PROFILE_NAME = "User"
-    const val UNKNOWN_ERROR_MESSAGE = "Unknown error occurred"
-    const val REVIEW_DATE_TIME_PATTERN = "dd-MM-yyyy HH:mm"
-    const val SEARCH_DEBOUNCE_MS = 300L
-}
+private const val DEFAULT_PROFILE_NAME = "User"
+private const val UNKNOWN_ERROR_MESSAGE = "Unknown error occurred"
+private const val REVIEW_DATE_TIME_PATTERN = "dd-MM-yyyy HH:mm"
+private const val SEARCH_DEBOUNCE_MS = 300L

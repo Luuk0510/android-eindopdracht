@@ -1,6 +1,6 @@
 package com.luuk.showtracker.ui.component
 
-import android.net.Uri
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -24,7 +25,7 @@ fun LocalUriImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop
 ) {
-    var bitmap by remember(imageUri) { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var bitmap by remember(imageUri) { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(imageUri) {
         bitmap = loadBitmap(imageUri)
@@ -48,12 +49,12 @@ fun LocalUriImage(
 
 private suspend fun loadBitmap(
     imageUri: String?
-): android.graphics.Bitmap? {
+): Bitmap? {
     if (imageUri.isNullOrBlank()) return null
 
     return withContext(Dispatchers.IO) {
         try {
-            val imagePath = Uri.parse(imageUri).path
+            val imagePath = imageUri.toUri().path
             BitmapFactory.decodeFile(imagePath)
         } catch (_: Exception) {
             null

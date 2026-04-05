@@ -7,34 +7,28 @@ import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 class TmdbService(context: Context) {
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context.applicationContext)
 
-    suspend fun getTrending(
-        apiKey: String,
-        page: Int
-    ): List<TmdbMediaItem> {
+    suspend fun getTrending(apiKey: String, page: Int): List<TmdbMediaItem> {
         val url = "${BASE_URL}trending/all/day?api_key=$apiKey&page=$page"
         return fetchMediaItems(url)
     }
 
-    suspend fun searchMedia(
-        apiKey: String,
-        query: String
-    ): List<TmdbMediaItem> {
+    suspend fun searchMedia(apiKey: String, query: String): List<TmdbMediaItem> {
         val encodedQuery = Uri.encode(query)
         val url = "${BASE_URL}search/multi?api_key=$apiKey&query=$encodedQuery"
         return fetchMediaItems(url)
     }
 
     private suspend fun fetchMediaItems(url: String): List<TmdbMediaItem> {
-        return suspendCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             val request = JsonObjectRequest(
                 Request.Method.GET,
                 url,
@@ -43,6 +37,7 @@ class TmdbService(context: Context) {
                 { error -> continuation.resumeWithException(error) }
             )
             request.setShouldCache(true)
+            continuation.invokeOnCancellation { request.cancel() }
             requestQueue.add(request)
         }
     }
@@ -100,3 +95,5 @@ private fun String.nullIfBlank(): String? {
 }
 
 private const val BASE_URL = "https://api.themoviedb.org/3/"
+
+
