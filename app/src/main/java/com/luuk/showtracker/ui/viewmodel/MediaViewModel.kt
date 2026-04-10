@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -52,8 +53,11 @@ class MediaViewModel(
     private val _watchedIds = MutableStateFlow(watchedStorage.loadWatchedIds())
     val watchedIds: StateFlow<Set<Int>> = _watchedIds.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _isTrendingLoading = MutableStateFlow(false)
+    val isTrendingLoading: StateFlow<Boolean> = _isTrendingLoading.asStateFlow()
+
+    private val _isSearchLoading = MutableStateFlow(false)
+    val isSearchLoading: StateFlow<Boolean> = _isSearchLoading.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
@@ -68,10 +72,10 @@ class MediaViewModel(
     }
 
     fun loadNextPage() {
-        if (_isLoading.value || isLastPage) return
+        if (_isTrendingLoading.value || isLastPage) return
 
         viewModelScope.launch {
-            _isLoading.value = true
+            _isTrendingLoading.value = true
             try {
                 val newItems = tmdbService.getTrending(
                     apiKey = BuildConfig.TMDB_API_KEY,
@@ -88,7 +92,7 @@ class MediaViewModel(
                 _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
             }
 
-            _isLoading.value = false
+            _isTrendingLoading.value = false
         }
     }
 
@@ -97,13 +101,14 @@ class MediaViewModel(
 
         if (query.isBlank()) {
             _searchResults.value = emptyList()
+            _isSearchLoading.value = false
             _errorMessage.value = null
             return
         }
 
         searchJob = viewModelScope.launch {
             delay(SEARCH_DEBOUNCE_MS)
-            _isLoading.value = true
+            _isSearchLoading.value = true
 
             try {
                 _searchResults.value = tmdbService.searchMedia(
@@ -111,12 +116,14 @@ class MediaViewModel(
                     query = query
                 )
                 _errorMessage.value = null
+            } catch (error: CancellationException) {
+                throw error
             } catch (error: Exception) {
                 _searchResults.value = emptyList()
                 _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+            } finally {
+                _isSearchLoading.value = false
             }
-
-            _isLoading.value = false
         }
     }
 

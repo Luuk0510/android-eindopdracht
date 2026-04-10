@@ -58,7 +58,8 @@ fun TrendingMediaScreen(
     val searchResults by viewModel.searchResults.collectAsState()
     val reviews by viewModel.reviews.collectAsState()
     val watchedIds by viewModel.watchedIds.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val isTrendingLoading by viewModel.isTrendingLoading.collectAsState()
+    val isSearchLoading by viewModel.isSearchLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val configuration = LocalConfiguration.current
     val columnCount = if (
@@ -77,7 +78,8 @@ fun TrendingMediaScreen(
     TrendingMediaContent(
         mediaItems = mediaItems,
         shownItems = shownItems,
-        isLoading = isLoading,
+        isTrendingLoading = isTrendingLoading,
+        isSearchLoading = isSearchLoading,
         errorMessage = errorMessage,
         searchQuery = searchQuery,
         columnCount = columnCount,
@@ -94,7 +96,8 @@ fun TrendingMediaScreen(
 private fun TrendingMediaContent(
     mediaItems: List<TmdbMediaItem>,
     shownItems: List<TmdbMediaItem>,
-    isLoading: Boolean,
+    isTrendingLoading: Boolean,
+    isSearchLoading: Boolean,
     errorMessage: String?,
     searchQuery: String,
     columnCount: Int,
@@ -110,12 +113,29 @@ private fun TrendingMediaContent(
             .fillMaxSize()
             .padding(horizontal = TrendingMediaScreenDefaults.GridOuterPadding)
     ) {
-        if (isLoading && mediaItems.isEmpty()) {
-            CenterLoadingIndicator()
+        if (searchQuery.isBlank()) {
+            if (isTrendingLoading && mediaItems.isEmpty()) {
+                CenterLoadingIndicator()
+            } else {
+                TrendingMediaGrid(
+                    shownItems = shownItems,
+                    isLoading = isTrendingLoading,
+                    searchQuery = searchQuery,
+                    columnCount = columnCount,
+                    isWatched = isWatched,
+                    ratingBadge = ratingBadge,
+                    onLoadNextPage = onLoadNextPage,
+                    onItemClick = onItemClick
+                )
+            }
+
+            if (errorMessage != null && mediaItems.isEmpty()) {
+                CenterErrorState(onRetryClick = onRetryClick)
+            }
         } else {
             TrendingMediaGrid(
                 shownItems = shownItems,
-                isLoading = isLoading,
+                isLoading = false,
                 searchQuery = searchQuery,
                 columnCount = columnCount,
                 isWatched = isWatched,
@@ -123,22 +143,20 @@ private fun TrendingMediaContent(
                 onLoadNextPage = onLoadNextPage,
                 onItemClick = onItemClick
             )
-        }
 
-        if (errorMessage != null && mediaItems.isEmpty() && searchQuery.isBlank()) {
-            CenterErrorState(onRetryClick = onRetryClick)
-        } else if (errorMessage != null && mediaItems.isEmpty()) {
-            CenterMessage(
-                text = stringResource(R.string.message_could_not_load_items),
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        if (!isLoading && shownItems.isEmpty() && searchQuery.isNotBlank()) {
-            CenterMessage(
-                text = stringResource(R.string.message_no_results),
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            if (isSearchLoading && shownItems.isEmpty()) {
+                CenterLoadingIndicator()
+            } else if (errorMessage != null && shownItems.isEmpty()) {
+                CenterMessage(
+                    text = stringResource(R.string.message_could_not_load_items),
+                    color = MaterialTheme.colorScheme.error
+                )
+            } else if (!isSearchLoading && shownItems.isEmpty()) {
+                CenterMessage(
+                    text = stringResource(R.string.message_no_results),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
     }
 }
