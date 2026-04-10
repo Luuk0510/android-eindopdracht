@@ -35,7 +35,10 @@ import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 @Composable
 fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     val profile by viewModel.profile.collectAsState()
+    val savedItems by viewModel.savedItems.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
     val watchlistSortOption by viewModel.watchlistSortOption.collectAsState()
+    val watchedIds by viewModel.watchedIds.collectAsState()
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -133,6 +136,9 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
         ProfileDialogHost(
             profileName = profile.name,
             profilePhotoUri = profile.photoUri,
+            savedCount = savedItems.size,
+            watchedCount = watchedIds.size,
+            reviewCount = reviews.size,
             showProfileDialog = showProfileDialogState.value,
             onDismiss = { showProfileDialogState.value = false },
             onSave = { name, photoUri ->

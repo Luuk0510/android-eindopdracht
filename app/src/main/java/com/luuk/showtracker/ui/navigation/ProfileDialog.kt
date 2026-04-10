@@ -44,6 +44,9 @@ import java.io.FileOutputStream
 internal fun ProfileDialogHost(
     profileName: String,
     profilePhotoUri: String?,
+    savedCount: Int,
+    watchedCount: Int,
+    reviewCount: Int,
     showProfileDialog: Boolean,
     onDismiss: () -> Unit,
     onSave: (String, String?) -> Unit
@@ -73,6 +76,9 @@ internal fun ProfileDialogHost(
     ProfileDialog(
         profileName = profileNameState.value,
         profilePhotoUri = profilePhotoState.value,
+        savedCount = savedCount,
+        watchedCount = watchedCount,
+        reviewCount = reviewCount,
         onProfileNameChange = { profileNameState.value = it },
         onRemovePhotoClick = { profilePhotoState.value = null },
         onTakePhotoClick = {
@@ -91,6 +97,9 @@ internal fun ProfileDialogHost(
 private fun ProfileDialog(
     profileName: String,
     profilePhotoUri: String?,
+    savedCount: Int,
+    watchedCount: Int,
+    reviewCount: Int,
     onProfileNameChange: (String) -> Unit,
     onRemovePhotoClick: () -> Unit,
     onTakePhotoClick: () -> Unit,
@@ -150,7 +159,11 @@ private fun ProfileDialog(
                     )
 
                     Spacer(modifier = Modifier.padding(top = AppNavigationDefaults.ProfileDialogSpacing))
-
+                    ProfileStatsRow(
+                        savedCount = savedCount,
+                        watchedCount = watchedCount,
+                        reviewCount = reviewCount
+                    )
                 }
 
                 Spacer(modifier = Modifier.padding(top = AppNavigationDefaults.ProfileFieldSpacing))
@@ -196,6 +209,63 @@ private fun ProfileDialog(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ProfileStatsRow(
+    savedCount: Int,
+    watchedCount: Int,
+    reviewCount: Int
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(AppNavigationDefaults.ProfileStatsSpacing)
+    ) {
+        ProfileStatItem(
+            value = savedCount.toString(),
+            label = stringResource(R.string.profile_stat_saved),
+            modifier = Modifier.weight(1f)
+        )
+        ProfileStatItem(
+            value = watchedCount.toString(),
+            label = stringResource(R.string.profile_stat_watched),
+            modifier = Modifier.weight(1f)
+        )
+        ProfileStatItem(
+            value = reviewCount.toString(),
+            label = stringResource(R.string.profile_stat_reviews),
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun ProfileStatItem(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.padding(AppNavigationDefaults.ProfileStatsInnerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = value,
+                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text(
+                text = label,
+                color = Color.White,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }

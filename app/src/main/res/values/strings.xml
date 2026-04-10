@@ -16,6 +16,9 @@
     <string name="profile_remove_photo">Remove photo</string>
     <string name="profile_name_label">Profile name</string>
     <string name="profile_save">Save profile</string>
+    <string name="profile_stat_saved">Saved</string>
+    <string name="profile_stat_watched">Watched</string>
+    <string name="profile_stat_reviews">Reviews</string>
     <string name="content_close">Close</string>
 
     <string name="sort_watchlist_title">Sort watchlist</string>

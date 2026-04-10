@@ -29,6 +29,8 @@ internal object AppNavigationDefaults {
     val ProfileFieldSpacing = 18.dp
     val ProfileDialogActionsSpacing = 20.dp
     val ProfileCloseIconSize = 24.dp
+    val ProfileStatsSpacing = 8.dp
+    val ProfileStatsInnerPadding = 12.dp
 }
 
 @Composable
