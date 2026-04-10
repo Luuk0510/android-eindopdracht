@@ -21,10 +21,12 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -88,10 +90,12 @@ fun TrendingMediaScreen(
         ratingBadge = { itemId -> reviews[itemId]?.rating?.toString() },
         onLoadNextPage = viewModel::loadNextPage,
         onRetryClick = viewModel::loadNextPage,
+        onRefreshClick = viewModel::refreshTrending,
         onItemClick = onItemClick
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TrendingMediaContent(
     mediaItems: List<TmdbMediaItem>,
@@ -106,20 +110,46 @@ private fun TrendingMediaContent(
     ratingBadge: (Int) -> String?,
     onLoadNextPage: () -> Unit,
     onRetryClick: () -> Unit,
+    onRefreshClick: () -> Unit,
     onItemClick: (TmdbMediaItem) -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = TrendingMediaScreenDefaults.GridOuterPadding)
+    PullToRefreshBox(
+        isRefreshing = searchQuery.isBlank() && isTrendingLoading,
+        onRefresh = {
+            if (searchQuery.isBlank()) {
+                onRefreshClick()
+            }
+        },
+        modifier = modifier.fillMaxSize()
     ) {
-        if (searchQuery.isBlank()) {
-            if (isTrendingLoading && mediaItems.isEmpty()) {
-                CenterLoadingIndicator()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = TrendingMediaScreenDefaults.GridOuterPadding)
+        ) {
+            if (searchQuery.isBlank()) {
+                if (isTrendingLoading && mediaItems.isEmpty()) {
+                    CenterLoadingIndicator()
+                } else {
+                    TrendingMediaGrid(
+                        shownItems = shownItems,
+                        isLoading = isTrendingLoading,
+                        searchQuery = searchQuery,
+                        columnCount = columnCount,
+                        isWatched = isWatched,
+                        ratingBadge = ratingBadge,
+                        onLoadNextPage = onLoadNextPage,
+                        onItemClick = onItemClick
+                    )
+                }
+
+                if (errorMessage != null && mediaItems.isEmpty()) {
+                    CenterErrorState(onRetryClick = onRetryClick)
+                }
             } else {
                 TrendingMediaGrid(
                     shownItems = shownItems,
-                    isLoading = isTrendingLoading,
+                    isLoading = false,
                     searchQuery = searchQuery,
                     columnCount = columnCount,
                     isWatched = isWatched,
@@ -127,35 +157,20 @@ private fun TrendingMediaContent(
                     onLoadNextPage = onLoadNextPage,
                     onItemClick = onItemClick
                 )
-            }
 
-            if (errorMessage != null && mediaItems.isEmpty()) {
-                CenterErrorState(onRetryClick = onRetryClick)
-            }
-        } else {
-            TrendingMediaGrid(
-                shownItems = shownItems,
-                isLoading = false,
-                searchQuery = searchQuery,
-                columnCount = columnCount,
-                isWatched = isWatched,
-                ratingBadge = ratingBadge,
-                onLoadNextPage = onLoadNextPage,
-                onItemClick = onItemClick
-            )
-
-            if (isSearchLoading && shownItems.isEmpty()) {
-                CenterLoadingIndicator()
-            } else if (errorMessage != null && shownItems.isEmpty()) {
-                CenterMessage(
-                    text = stringResource(R.string.message_could_not_load_items),
-                    color = MaterialTheme.colorScheme.error
-                )
-            } else if (!isSearchLoading && shownItems.isEmpty()) {
-                CenterMessage(
-                    text = stringResource(R.string.message_no_results),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                if (isSearchLoading && shownItems.isEmpty()) {
+                    CenterLoadingIndicator()
+                } else if (errorMessage != null && shownItems.isEmpty()) {
+                    CenterMessage(
+                        text = stringResource(R.string.message_could_not_load_items),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                } else if (!isSearchLoading && shownItems.isEmpty()) {
+                    CenterMessage(
+                        text = stringResource(R.string.message_no_results),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
         }
     }

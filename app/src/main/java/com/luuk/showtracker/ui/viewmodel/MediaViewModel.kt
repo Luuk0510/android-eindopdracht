@@ -96,6 +96,16 @@ class MediaViewModel(
         }
     }
 
+    fun refreshTrending() {
+        if (_isTrendingLoading.value) return
+
+        _mediaItems.value = emptyList()
+        currentPage = 1
+        isLastPage = false
+        _errorMessage.value = null
+        loadNextPage()
+    }
+
     fun searchMedia(query: String) {
         searchJob?.cancel()
 
