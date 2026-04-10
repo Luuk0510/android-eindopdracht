@@ -3,8 +3,6 @@ package com.luuk.showtracker.ui.component
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
@@ -40,10 +38,7 @@ fun TmdbPosterImage(
             contentScale = contentScale
         )
     } else {
-        Surface(
-            modifier = modifier,
-            color = MaterialTheme.colorScheme.surfaceVariant
-        ) {}
+        ImagePlaceholder(modifier = modifier)
     }
 }
 
