@@ -65,4 +65,8 @@
     <string name="detail_post_review">Post review</string>
     <string name="detail_delete_review">Delete review</string>
     <string name="detail_update_review">Update review</string>
+    <string name="detail_delete_review_confirm_title">Delete review?</string>
+    <string name="detail_delete_review_confirm_message">This will permanently remove your review.</string>
+    <string name="detail_delete_review_confirm_action">Delete</string>
+    <string name="detail_delete_review_cancel_action">Cancel</string>
 </resources>

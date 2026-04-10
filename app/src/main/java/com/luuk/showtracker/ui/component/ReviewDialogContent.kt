@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -49,6 +50,7 @@ fun ReviewDialogContent(
     var reviewTitle by remember(currentReview) { mutableStateOf(currentReview?.title.orEmpty()) }
     var reviewText by remember(currentReview) { mutableStateOf(currentReview?.reviewText.orEmpty()) }
     var selectedRating by remember(currentReview) { mutableIntStateOf(currentReview?.rating ?: 0) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -127,7 +129,7 @@ fun ReviewDialogContent(
                     }
                 } else {
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        TextButton(onClick = onDelete) {
+                        TextButton(onClick = { showDeleteDialog = true }) {
                             Text(stringResource(R.string.detail_delete_review))
                         }
 
@@ -145,6 +147,33 @@ fun ReviewDialogContent(
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(text = stringResource(R.string.detail_delete_review_confirm_title))
+            },
+            text = {
+                Text(text = stringResource(R.string.detail_delete_review_confirm_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                    }
+                ) {
+                    Text(text = stringResource(R.string.detail_delete_review_confirm_action))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(text = stringResource(R.string.detail_delete_review_cancel_action))
+                }
+            }
+        )
     }
 }
 
