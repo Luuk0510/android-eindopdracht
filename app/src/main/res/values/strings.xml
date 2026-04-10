@@ -32,8 +32,15 @@
     <string name="action_try_again">Try again</string>
     <string name="saved_empty_title">Nothing saved yet.</string>
     <string name="saved_empty_subtitle">Save movies or shows from Trending to see them here.</string>
+    <string name="saved_empty_watched_title">No watched items yet.</string>
+    <string name="saved_empty_watched_subtitle">Mark saved movies or shows as watched to see them here.</string>
+    <string name="saved_empty_unwatched_title">No unwatched items left.</string>
+    <string name="saved_empty_unwatched_subtitle">Everything in your saved list is marked as watched.</string>
     <string name="saved_no_results_title">No matching saved items.</string>
     <string name="saved_no_results_subtitle">Try a different search term.</string>
+    <string name="saved_filter_all">All</string>
+    <string name="saved_filter_watched">Watched</string>
+    <string name="saved_filter_unwatched">Unwatched</string>
 
     <string name="content_watched">Watched</string>
     <string name="content_back">Back</string>

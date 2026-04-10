@@ -6,15 +6,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -37,6 +44,7 @@ fun SavedMediaScreen(
     val reviews by viewModel.reviews.collectAsState()
     val watchedIds by viewModel.watchedIds.collectAsState()
     val watchlistSortOption by viewModel.watchlistSortOption.collectAsState()
+    var selectedFilter by rememberSaveable { mutableStateOf(SavedFilter.ALL) }
     val configuration = LocalConfiguration.current
     val columnCount = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
         SavedMediaScreenDefaults.LANDSCAPE_COLUMN_COUNT
@@ -44,18 +52,28 @@ fun SavedMediaScreen(
         SavedMediaScreenDefaults.PORTRAIT_COLUMN_COUNT
     }
     val sortedSavedItems = savedItems.sortedForWatchlist(watchlistSortOption)
-    val shownItems = sortedSavedItems.filter { item ->
+    val filteredSavedItems = sortedSavedItems.filter { item ->
+        when (selectedFilter) {
+            SavedFilter.ALL -> true
+            SavedFilter.WATCHED -> watchedIds.contains(item.id)
+            SavedFilter.UNWATCHED -> !watchedIds.contains(item.id)
+        }
+    }
+    val shownItems = filteredSavedItems.filter { item ->
         val mediaTitle = item.title ?: item.name ?: ""
         mediaTitle.contains(searchQuery, ignoreCase = true)
     }
 
     SavedMediaContent(
         savedItems = sortedSavedItems,
+        selectedFilter = selectedFilter,
+        searchQuery = searchQuery,
         shownItems = shownItems,
         columnCount = columnCount,
         modifier = modifier,
         isWatched = { itemId -> watchedIds.contains(itemId) },
         ratingBadge = { itemId -> reviews[itemId]?.rating?.toString() },
+        onFilterSelected = { selectedFilter = it },
         onItemClick = onItemClick
     )
 }
@@ -63,11 +81,14 @@ fun SavedMediaScreen(
 @Composable
 private fun SavedMediaContent(
     savedItems: List<TmdbMediaItem>,
+    selectedFilter: SavedFilter,
+    searchQuery: String,
     shownItems: List<TmdbMediaItem>,
     columnCount: Int,
     modifier: Modifier = Modifier,
     isWatched: (Int) -> Boolean,
     ratingBadge: (Int) -> String?,
+    onFilterSelected: (SavedFilter) -> Unit,
     onItemClick: (Int) -> Unit
 ) {
     when {
@@ -80,21 +101,86 @@ private fun SavedMediaContent(
         }
 
         shownItems.isEmpty() -> {
-            SavedStateMessage(
-                title = stringResource(R.string.saved_no_results_title),
-                subtitle = stringResource(R.string.saved_no_results_subtitle),
-                modifier = modifier
-            )
+            SavedContent(
+                modifier = modifier,
+                selectedFilter = selectedFilter,
+                onFilterSelected = onFilterSelected
+            ) {
+                SavedStateMessage(
+                    title = savedEmptyFilterTitle(selectedFilter, searchQuery),
+                    subtitle = savedEmptyFilterSubtitle(selectedFilter, searchQuery),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
 
         else -> {
-            WatchlistGrid(
-                shownItems = shownItems,
-                columnCount = columnCount,
+            SavedContent(
                 modifier = modifier,
-                isWatched = isWatched,
-                ratingBadge = ratingBadge,
-                onItemClick = onItemClick
+                selectedFilter = selectedFilter,
+                onFilterSelected = onFilterSelected
+            ) {
+                WatchlistGrid(
+                    shownItems = shownItems,
+                    columnCount = columnCount,
+                    isWatched = isWatched,
+                    ratingBadge = ratingBadge,
+                    onItemClick = onItemClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavedContent(
+    selectedFilter: SavedFilter,
+    onFilterSelected: (SavedFilter) -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        SavedFilterRow(
+            selectedFilter = selectedFilter,
+            onFilterSelected = onFilterSelected
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = SavedMediaScreenDefaults.GridOuterPadding)
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun SavedFilterRow(
+    selectedFilter: SavedFilter,
+    onFilterSelected: (SavedFilter) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = SavedMediaScreenDefaults.ScreenPadding,
+                end = SavedMediaScreenDefaults.ScreenPadding,
+                top = SavedMediaScreenDefaults.ScreenPadding,
+                bottom = SavedMediaScreenDefaults.FilterRowBottomPadding
+            ),
+        horizontalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.FilterChipSpacing)
+    ) {
+        SavedFilter.entries.forEach { filter ->
+            FilterChip(
+                selected = selectedFilter == filter,
+                onClick = { onFilterSelected(filter) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.secondary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onSecondary
+                ),
+                label = {
+                    Text(text = stringResource(filter.labelResId))
+                }
             )
         }
     }
@@ -133,16 +219,13 @@ private fun SavedStateMessage(
 private fun WatchlistGrid(
     shownItems: List<TmdbMediaItem>,
     columnCount: Int,
-    modifier: Modifier = Modifier,
     isWatched: (Int) -> Boolean,
     ratingBadge: (Int) -> String?,
     onItemClick: (Int) -> Unit
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(columnCount),
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = SavedMediaScreenDefaults.GridOuterPadding),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(SavedMediaScreenDefaults.ScreenPadding),
         verticalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing),
         horizontalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing)
@@ -164,8 +247,48 @@ private object SavedMediaScreenDefaults {
 
     val GridOuterPadding = 4.dp
     val GridSpacing = 16.dp
+    val FilterChipSpacing = 8.dp
+    val FilterRowBottomPadding = 4.dp
     val ScreenPadding = 16.dp
     val MessageSubtitleTopPadding = 8.dp
+}
+
+private enum class SavedFilter(val labelResId: Int) {
+    ALL(R.string.saved_filter_all),
+    WATCHED(R.string.saved_filter_watched),
+    UNWATCHED(R.string.saved_filter_unwatched)
+}
+
+@Composable
+private fun savedEmptyFilterTitle(
+    selectedFilter: SavedFilter,
+    searchQuery: String
+): String {
+    if (searchQuery.isNotBlank()) {
+        return stringResource(R.string.saved_no_results_title)
+    }
+
+    return when (selectedFilter) {
+        SavedFilter.ALL -> stringResource(R.string.saved_empty_title)
+        SavedFilter.WATCHED -> stringResource(R.string.saved_empty_watched_title)
+        SavedFilter.UNWATCHED -> stringResource(R.string.saved_empty_unwatched_title)
+    }
+}
+
+@Composable
+private fun savedEmptyFilterSubtitle(
+    selectedFilter: SavedFilter,
+    searchQuery: String
+): String {
+    if (searchQuery.isNotBlank()) {
+        return stringResource(R.string.saved_no_results_subtitle)
+    }
+
+    return when (selectedFilter) {
+        SavedFilter.ALL -> stringResource(R.string.saved_empty_subtitle)
+        SavedFilter.WATCHED -> stringResource(R.string.saved_empty_watched_subtitle)
+        SavedFilter.UNWATCHED -> stringResource(R.string.saved_empty_unwatched_subtitle)
+    }
 }
 
 private fun List<TmdbMediaItem>.sortedForWatchlist(sortOption: WatchlistSortOption): List<TmdbMediaItem> {
