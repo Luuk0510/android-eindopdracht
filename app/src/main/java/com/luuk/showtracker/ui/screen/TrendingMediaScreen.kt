@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import com.luuk.showtracker.R
 import com.luuk.showtracker.data.model.TmdbMediaItem
+import com.luuk.showtracker.ui.component.CompactPrimaryButton
 import com.luuk.showtracker.ui.component.TmdbPosterImage
 import com.luuk.showtracker.ui.theme.SurfaceDark
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
@@ -84,6 +85,7 @@ fun TrendingMediaScreen(
         isWatched = { itemId -> watchedIds.contains(itemId) },
         ratingBadge = { itemId -> reviews[itemId]?.rating?.toString() },
         onLoadNextPage = viewModel::loadNextPage,
+        onRetryClick = viewModel::loadNextPage,
         onItemClick = onItemClick
     )
 }
@@ -100,6 +102,7 @@ private fun TrendingMediaContent(
     isWatched: (Int) -> Boolean,
     ratingBadge: (Int) -> String?,
     onLoadNextPage: () -> Unit,
+    onRetryClick: () -> Unit,
     onItemClick: (TmdbMediaItem) -> Unit
 ) {
     Box(
@@ -122,9 +125,11 @@ private fun TrendingMediaContent(
             )
         }
 
-        if (errorMessage != null && mediaItems.isEmpty()) {
+        if (errorMessage != null && mediaItems.isEmpty() && searchQuery.isBlank()) {
+            CenterErrorState(onRetryClick = onRetryClick)
+        } else if (errorMessage != null && mediaItems.isEmpty()) {
             CenterMessage(
-                text = errorMessage,
+                text = stringResource(R.string.message_could_not_load_items),
                 color = MaterialTheme.colorScheme.error
             )
         }
@@ -212,6 +217,31 @@ private fun BoxScope.CenterMessage(
             .align(Alignment.Center)
             .padding(TrendingMediaScreenDefaults.GridContentPadding)
     )
+}
+
+@Composable
+private fun BoxScope.CenterErrorState(onRetryClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .align(Alignment.Center)
+            .padding(TrendingMediaScreenDefaults.GridContentPadding),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.message_could_not_load_items),
+            color = MaterialTheme.colorScheme.error
+        )
+        Text(
+            text = stringResource(R.string.message_check_connection),
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(top = TrendingMediaScreenDefaults.ErrorTextTopPadding)
+        )
+        CompactPrimaryButton(
+            text = stringResource(R.string.action_try_again),
+            onClick = onRetryClick,
+            modifier = Modifier.padding(top = TrendingMediaScreenDefaults.ErrorButtonTopPadding)
+        )
+    }
 }
 
 @Composable
@@ -321,6 +351,8 @@ private object TrendingMediaScreenDefaults {
     val GridContentPadding = 16.dp
     val GridSpacing = 16.dp
     val LoadingIndicatorSize = 32.dp
+    val ErrorTextTopPadding = 6.dp
+    val ErrorButtonTopPadding = 12.dp
     val MediaCardCornerRadius = 16.dp
     val MediaCardElevation = 6.dp
     const val MEDIA_POSTER_ASPECT_RATIO = 0.68f
