@@ -13,7 +13,10 @@ import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.model.UserProfile
 import com.luuk.showtracker.data.model.WatchlistSortOption
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
@@ -61,6 +64,12 @@ class MediaViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _snackbarMessages = MutableSharedFlow<String>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val snackbarMessages: SharedFlow<String> = _snackbarMessages
 
     private var currentPage = 1
     private var isLastPage = false
@@ -143,8 +152,10 @@ class MediaViewModel(
 
         if (isAlreadySaved) {
             _savedItems.value = currentSavedItems.filterNot { it.id == item.id }
+            showSnackbar(SAVED_REMOVED_MESSAGE)
         } else {
             _savedItems.value = listOf(item) + currentSavedItems
+            showSnackbar(SAVED_ADDED_MESSAGE)
         }
 
         savedMediaStorage.saveSavedMedia(_savedItems.value)
@@ -157,6 +168,7 @@ class MediaViewModel(
         )
         _profile.value = updatedProfile
         profileStorage.saveProfile(updatedProfile)
+        showSnackbar(PROFILE_SAVED_MESSAGE)
     }
 
     fun toggleWatched(itemId: Int) {
@@ -195,6 +207,7 @@ class MediaViewModel(
         updatedReviews[itemId] = review
         _reviews.value = updatedReviews
         reviewStorage.saveReviews(_reviews.value)
+        showSnackbar(REVIEW_SAVED_MESSAGE)
     }
 
     fun deleteReview(itemId: Int) {
@@ -202,6 +215,7 @@ class MediaViewModel(
         updatedReviews.remove(itemId)
         _reviews.value = updatedReviews
         reviewStorage.saveReviews(_reviews.value)
+        showSnackbar(REVIEW_DELETED_MESSAGE)
     }
 
     fun selectMediaItem(item: TmdbMediaItem) {
@@ -230,9 +244,18 @@ class MediaViewModel(
         val formatter = DateTimeFormatter.ofPattern(REVIEW_DATE_TIME_PATTERN)
         return LocalDateTime.now().format(formatter)
     }
+
+    private fun showSnackbar(message: String) {
+        _snackbarMessages.tryEmit(message)
+    }
 }
 
 private const val DEFAULT_PROFILE_NAME = "User"
 private const val UNKNOWN_ERROR_MESSAGE = "Unknown error occurred"
 private const val REVIEW_DATE_TIME_PATTERN = "dd-MM-yyyy HH:mm"
 private const val SEARCH_DEBOUNCE_MS = 300L
+private const val SAVED_ADDED_MESSAGE = "Added to saved"
+private const val SAVED_REMOVED_MESSAGE = "Removed from saved"
+private const val PROFILE_SAVED_MESSAGE = "Profile updated"
+private const val REVIEW_SAVED_MESSAGE = "Review saved"
+private const val REVIEW_DELETED_MESSAGE = "Review deleted"
