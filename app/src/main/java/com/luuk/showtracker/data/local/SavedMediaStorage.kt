@@ -8,7 +8,7 @@ import org.json.JSONObject
 
 class SavedMediaStorage(context: Context) {
     private val sharedPreferences =
-        context.getSharedPreferences("saved_media_storage", Context.MODE_PRIVATE)
+        context.getSharedPreferences(SavedMediaStorageDefaults.PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     fun loadSavedMedia(): List<TmdbMediaItem> {
         val json = sharedPreferences.getString(SavedMediaStorageDefaults.SAVED_MEDIA_KEY, null)
@@ -89,6 +89,7 @@ private fun String.nullIfBlank(): String? {
 }
 
 private object SavedMediaStorageDefaults {
+    const val PREFERENCES_NAME = "saved_media_storage"
     const val SAVED_MEDIA_KEY = "saved_media_json"
     const val ID_FIELD = "id"
     const val TITLE_FIELD = "title"

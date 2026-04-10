@@ -36,8 +36,7 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val isTopLevelScreen =
-        currentDestination?.route == Screen.Home.route || currentDestination?.route == Screen.Saved.route
+    val isTopLevelScreen = currentDestination?.route == Screen.Home.route || currentDestination?.route == Screen.Saved.route
     val isSavedScreen = currentDestination?.route == Screen.Saved.route
     var searchText by remember { mutableStateOf("") }
     var showSearchField by remember { mutableStateOf(false) }

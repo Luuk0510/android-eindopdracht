@@ -85,7 +85,7 @@ class MediaViewModel(
                 }
                 _errorMessage.value = null
             } catch (error: Exception) {
-                _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+                _errorMessage.value = error.message
             }
 
             _isLoading.value = false

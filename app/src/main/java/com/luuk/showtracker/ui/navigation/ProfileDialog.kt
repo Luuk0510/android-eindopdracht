@@ -214,7 +214,7 @@ private fun saveProfilePhoto(context: Context, bitmap: Bitmap): String? {
             bitmap.compress(Bitmap.CompressFormat.JPEG, AppNavigationDefaults.PROFILE_PHOTO_QUALITY, outputStream)
         }
         Uri.fromFile(photoFile).toString()
-    } catch (_: Exception) {
+    } catch (exception: Exception) {
         null
     }
 }
