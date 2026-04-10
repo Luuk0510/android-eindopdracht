@@ -3,6 +3,7 @@ package com.luuk.showtracker.ui.screen
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.luuk.showtracker.R
 import com.luuk.showtracker.data.model.TmdbMediaItem
@@ -70,15 +72,17 @@ private fun SavedMediaContent(
 ) {
     when {
         savedItems.isEmpty() -> {
-            WatchlistMessage(
-                text = stringResource(R.string.message_no_watchlist_items),
+            SavedStateMessage(
+                title = stringResource(R.string.saved_empty_title),
+                subtitle = stringResource(R.string.saved_empty_subtitle),
                 modifier = modifier
             )
         }
 
         shownItems.isEmpty() -> {
-            WatchlistMessage(
-                text = stringResource(R.string.message_no_results),
+            SavedStateMessage(
+                title = stringResource(R.string.saved_no_results_title),
+                subtitle = stringResource(R.string.saved_no_results_subtitle),
                 modifier = modifier
             )
         }
@@ -97,16 +101,31 @@ private fun SavedMediaContent(
 }
 
 @Composable
-private fun WatchlistMessage(text: String, modifier: Modifier = Modifier) {
+private fun SavedStateMessage(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(SavedMediaScreenDefaults.ScreenPadding)
-        )
+        Column(
+            modifier = Modifier.padding(SavedMediaScreenDefaults.ScreenPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = SavedMediaScreenDefaults.MessageSubtitleTopPadding)
+            )
+        }
     }
 }
 
@@ -146,6 +165,7 @@ private object SavedMediaScreenDefaults {
     val GridOuterPadding = 4.dp
     val GridSpacing = 16.dp
     val ScreenPadding = 16.dp
+    val MessageSubtitleTopPadding = 8.dp
 }
 
 private fun List<TmdbMediaItem>.sortedForWatchlist(sortOption: WatchlistSortOption): List<TmdbMediaItem> {
