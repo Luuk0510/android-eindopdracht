@@ -4,7 +4,8 @@ import android.content.Context
 import androidx.core.content.edit
 
 class WatchedStorage(context: Context) {
-    private val sharedPreferences = context.getSharedPreferences(WatchedStorageDefaults.PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val sharedPreferences =
+        context.getSharedPreferences(WatchedStorageDefaults.PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     fun loadWatchedIds(): Set<Int> {
         return sharedPreferences

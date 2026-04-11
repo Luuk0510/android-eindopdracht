@@ -12,8 +12,8 @@ import com.luuk.showtracker.data.api.TmdbService
 import com.luuk.showtracker.data.local.ProfileStorage
 import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
-import com.luuk.showtracker.data.local.WatchlistPreferences
 import com.luuk.showtracker.data.local.WatchedStorage
+import com.luuk.showtracker.data.local.WatchlistPreferences
 import com.luuk.showtracker.ui.navigation.ShowTrackerApp
 import com.luuk.showtracker.ui.theme.ShowTrackerTheme
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel

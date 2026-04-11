@@ -8,10 +8,12 @@ import org.json.JSONObject
 import org.json.JSONTokener
 
 class ReviewStorage(context: Context) {
-    private val sharedPreferences = context.getSharedPreferences(ReviewStorageDefaults.PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val sharedPreferences =
+        context.getSharedPreferences(ReviewStorageDefaults.PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     fun loadReviews(): Map<Int, MediaReview> {
-        val json = sharedPreferences.getString(ReviewStorageDefaults.REVIEWS_KEY, null) ?: return emptyMap()
+        val json = sharedPreferences.getString(ReviewStorageDefaults.REVIEWS_KEY, null)
+            ?: return emptyMap()
         val reviews = mutableMapOf<Int, MediaReview>()
         val parsedJson = try {
             JSONTokener(json).nextValue()
