@@ -54,11 +54,7 @@ fun SavedMediaScreen(
     }
     val sortedSavedItems = savedItems.sortedForWatchlist(watchlistSortOption)
     val filteredSavedItems = sortedSavedItems.filter { item ->
-        when (selectedFilter) {
-            SavedFilter.ALL -> true
-            SavedFilter.WATCHED -> watchedIds.contains(item.id)
-            SavedFilter.UNWATCHED -> !watchedIds.contains(item.id)
-        }
+        item.matchesSavedFilter(selectedFilter, watchedIds)
     }
     val shownItems = filteredSavedItems.filter { item ->
         val mediaTitle = item.title ?: item.name ?: ""
@@ -263,6 +259,17 @@ private enum class SavedFilter(val labelResId: Int) {
     ALL(R.string.saved_filter_all),
     WATCHED(R.string.saved_filter_watched),
     UNWATCHED(R.string.saved_filter_unwatched)
+}
+
+private fun TmdbMediaItem.matchesSavedFilter(
+    selectedFilter: SavedFilter,
+    watchedIds: Set<Int>
+): Boolean {
+    return when (selectedFilter) {
+        SavedFilter.ALL -> true
+        SavedFilter.WATCHED -> watchedIds.contains(id)
+        SavedFilter.UNWATCHED -> !watchedIds.contains(id)
+    }
 }
 
 @Composable
