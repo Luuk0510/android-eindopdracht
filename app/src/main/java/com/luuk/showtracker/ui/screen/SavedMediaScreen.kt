@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.luuk.showtracker.R
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.model.WatchlistSortOption
+import com.luuk.showtracker.ui.component.MediaItemCard
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
@@ -235,7 +236,7 @@ private fun WatchlistGrid(
         horizontalArrangement = Arrangement.spacedBy(SavedMediaScreenDefaults.GridSpacing)
     ) {
         items(shownItems, key = { it.id }) { item ->
-            MediaItemRow(
+            MediaItemCard(
                 item = item,
                 isWatched = isWatched(item.id),
                 ratingBadge = ratingBadge(item.id),

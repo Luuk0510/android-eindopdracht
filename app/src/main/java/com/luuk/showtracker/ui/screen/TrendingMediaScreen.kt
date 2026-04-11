@@ -1,13 +1,10 @@
 package com.luuk.showtracker.ui.screen
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,17 +12,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BookmarkRemove
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -34,20 +23,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import com.luuk.showtracker.R
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.ui.component.CompactPrimaryButton
-import com.luuk.showtracker.ui.component.TmdbPosterImage
-import com.luuk.showtracker.ui.theme.SurfaceDark
+import com.luuk.showtracker.ui.component.MediaItemCard
 import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 
 @Composable
@@ -204,7 +187,7 @@ private fun TrendingMediaGrid(
                 onLoadNextPage()
             }
 
-            MediaItemRow(
+            MediaItemCard(
                 item = item,
                 isWatched = isWatched(item.id),
                 ratingBadge = ratingBadge(item.id),
@@ -278,127 +261,6 @@ private fun BoxScope.CenterErrorState(onRetryClick: () -> Unit) {
     }
 }
 
-@Composable
-fun MediaItemRow(
-    item: TmdbMediaItem,
-    isWatched: Boolean = false,
-    ratingBadge: String? = null,
-    onRemoveClick: (() -> Unit)? = null,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        Card(
-            shape = RoundedCornerShape(TrendingMediaScreenDefaults.MediaCardCornerRadius),
-            colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = TrendingMediaScreenDefaults.MediaCardElevation
-            )
-        ) {
-            Box {
-                TmdbPosterImage(
-                    posterPath = item.posterPath,
-                    imageWidth = TrendingMediaScreenDefaults.POSTER_IMAGE_WIDTH,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(TrendingMediaScreenDefaults.MEDIA_POSTER_ASPECT_RATIO)
-                        .clip(RoundedCornerShape(TrendingMediaScreenDefaults.MediaCardCornerRadius)),
-                    contentScale = ContentScale.Crop
-                )
-
-                if (isWatched) {
-                    Surface(
-                        color = TrendingMediaScreenDefaults.MediaOverlayColor,
-                        shape = RoundedCornerShape(
-                            bottomStart = TrendingMediaScreenDefaults.MediaBadgeCornerRadius
-                        ),
-                        modifier = Modifier.align(Alignment.TopEnd)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Visibility,
-                            contentDescription = stringResource(R.string.content_watched),
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.padding(
-                                horizontal = TrendingMediaScreenDefaults.WatchedBadgeHorizontalPadding,
-                                vertical = TrendingMediaScreenDefaults.WatchedBadgeVerticalPadding
-                            )
-                        )
-                    }
-                }
-
-                if (onRemoveClick != null) {
-                    Surface(
-                        color = TrendingMediaScreenDefaults.MediaOverlayColor,
-                        shape = RoundedCornerShape(
-                            bottomEnd = TrendingMediaScreenDefaults.MediaBadgeCornerRadius
-                        ),
-                        modifier = Modifier.align(Alignment.TopStart)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.BookmarkRemove,
-                            contentDescription = stringResource(R.string.content_remove_from_watchlist),
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier
-                                .clickable(onClick = onRemoveClick)
-                                .padding(
-                                    horizontal = TrendingMediaScreenDefaults.RemoveBadgeHorizontalPadding,
-                                    vertical = TrendingMediaScreenDefaults.RemoveBadgeVerticalPadding
-                                )
-                        )
-                    }
-                }
-
-                if (!ratingBadge.isNullOrBlank()) {
-                    Surface(
-                        color = TrendingMediaScreenDefaults.MediaOverlayColor,
-                        shape = RoundedCornerShape(
-                            topStart = TrendingMediaScreenDefaults.MediaBadgeCornerRadius
-                        ),
-                        modifier = Modifier.align(Alignment.BottomEnd)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(
-                                horizontal = TrendingMediaScreenDefaults.RatingBadgeHorizontalPadding,
-                                vertical = TrendingMediaScreenDefaults.RatingBadgeVerticalPadding
-                            )
-                        ) {
-                            Text(
-                                text = ratingBadge,
-                                color = Color.White,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Icon(
-                                imageVector = Icons.Filled.Star,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier
-                                    .padding(start = TrendingMediaScreenDefaults.RatingStarSpacing)
-                                    .size(TrendingMediaScreenDefaults.RatingStarSize)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Text(
-            text = item.title ?: item.name ?: stringResource(R.string.message_unknown),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            color = Color.White,
-            modifier = Modifier.padding(top = TrendingMediaScreenDefaults.TitleTopPadding)
-        )
-    }
-}
-
 private object TrendingMediaScreenDefaults {
     const val PORTRAIT_COLUMN_COUNT = 2
     const val LANDSCAPE_COLUMN_COUNT = 4
@@ -410,19 +272,4 @@ private object TrendingMediaScreenDefaults {
     val LoadingIndicatorSize = 32.dp
     val ErrorTextTopPadding = 6.dp
     val ErrorButtonTopPadding = 12.dp
-    val MediaCardCornerRadius = 16.dp
-    val MediaCardElevation = 6.dp
-    const val MEDIA_POSTER_ASPECT_RATIO = 0.68f
-    val MediaBadgeCornerRadius = 12.dp
-    val WatchedBadgeHorizontalPadding = 10.dp
-    val WatchedBadgeVerticalPadding = 8.dp
-    val RemoveBadgeHorizontalPadding = 10.dp
-    val RemoveBadgeVerticalPadding = 8.dp
-    val RatingBadgeHorizontalPadding = 10.dp
-    val RatingBadgeVerticalPadding = 6.dp
-    val RatingStarSpacing = 4.dp
-    val RatingStarSize = 16.dp
-    val TitleTopPadding = 10.dp
-    val MediaOverlayColor = Color(0xCC121212)
-    const val POSTER_IMAGE_WIDTH = "w200"
 }
