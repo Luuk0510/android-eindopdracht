@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.compose.ui.focus.FocusRequester
@@ -50,9 +49,7 @@ internal fun ShowTrackerBottomBar(
     onWatchlistClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
-    NavigationBar(
-        windowInsets = WindowInsets(0, 0, 0, 0)
-    ) {
+    NavigationBar {
         NavigationBarItem(
             icon = {
                 Icon(
