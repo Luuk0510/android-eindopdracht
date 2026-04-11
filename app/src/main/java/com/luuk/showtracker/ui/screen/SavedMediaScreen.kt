@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.luuk.showtracker.R
+import com.luuk.showtracker.data.model.SavedFilter
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.model.WatchlistSortOption
 import com.luuk.showtracker.ui.component.MediaItemCard
@@ -253,12 +254,6 @@ private object SavedMediaScreenDefaults {
     val FilterRowBottomPadding = 4.dp
     val ScreenPadding = 16.dp
     val MessageSubtitleTopPadding = 8.dp
-}
-
-private enum class SavedFilter(val labelResId: Int) {
-    ALL(R.string.saved_filter_all),
-    WATCHED(R.string.saved_filter_watched),
-    UNWATCHED(R.string.saved_filter_unwatched)
 }
 
 private fun TmdbMediaItem.matchesSavedFilter(

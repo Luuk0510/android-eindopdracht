@@ -63,8 +63,11 @@ class MediaViewModel(
     private val _isSearchLoading = MutableStateFlow(false)
     val isSearchLoading: StateFlow<Boolean> = _isSearchLoading.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    private val _trendingErrorMessage = MutableStateFlow<String?>(null)
+    val trendingErrorMessage: StateFlow<String?> = _trendingErrorMessage.asStateFlow()
+
+    private val _searchErrorMessage = MutableStateFlow<String?>(null)
+    val searchErrorMessage: StateFlow<String?> = _searchErrorMessage.asStateFlow()
 
     private val _snackbarMessages = MutableSharedFlow<Int>(
         extraBufferCapacity = 1,
@@ -97,12 +100,12 @@ class MediaViewModel(
                     _mediaItems.value += newItems
                     currentPage++
                 }
-                _errorMessage.value = null
+                _trendingErrorMessage.value = null
             } catch (error: Exception) {
-                _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+                _trendingErrorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+            } finally {
+                _isTrendingLoading.value = false
             }
-
-            _isTrendingLoading.value = false
         }
     }
 
@@ -112,7 +115,7 @@ class MediaViewModel(
         _mediaItems.value = emptyList()
         currentPage = 1
         isLastPage = false
-        _errorMessage.value = null
+        _trendingErrorMessage.value = null
         loadNextPage()
     }
 
@@ -122,7 +125,7 @@ class MediaViewModel(
         if (query.isBlank()) {
             _searchResults.value = emptyList()
             _isSearchLoading.value = false
-            _errorMessage.value = null
+            _searchErrorMessage.value = null
             return
         }
 
@@ -135,12 +138,12 @@ class MediaViewModel(
                     apiKey = BuildConfig.TMDB_API_KEY,
                     query = query
                 )
-                _errorMessage.value = null
+                _searchErrorMessage.value = null
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
                 _searchResults.value = emptyList()
-                _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+                _searchErrorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
             } finally {
                 _isSearchLoading.value = false
             }

@@ -46,7 +46,8 @@ fun TrendingMediaScreen(
     val watchedIds by viewModel.watchedIds.collectAsState()
     val isTrendingLoading by viewModel.isTrendingLoading.collectAsState()
     val isSearchLoading by viewModel.isSearchLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val trendingErrorMessage by viewModel.trendingErrorMessage.collectAsState()
+    val searchErrorMessage by viewModel.searchErrorMessage.collectAsState()
     val configuration = LocalConfiguration.current
     val columnCount = if (
         configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -66,7 +67,8 @@ fun TrendingMediaScreen(
         shownItems = shownItems,
         isTrendingLoading = isTrendingLoading,
         isSearchLoading = isSearchLoading,
-        errorMessage = errorMessage,
+        trendingErrorMessage = trendingErrorMessage,
+        searchErrorMessage = searchErrorMessage,
         searchQuery = searchQuery,
         columnCount = columnCount,
         modifier = modifier,
@@ -86,7 +88,8 @@ private fun TrendingMediaContent(
     shownItems: List<TmdbMediaItem>,
     isTrendingLoading: Boolean,
     isSearchLoading: Boolean,
-    errorMessage: String?,
+    trendingErrorMessage: String?,
+    searchErrorMessage: String?,
     searchQuery: String,
     columnCount: Int,
     modifier: Modifier = Modifier,
@@ -127,7 +130,7 @@ private fun TrendingMediaContent(
                     )
                 }
 
-                if (errorMessage != null && mediaItems.isEmpty()) {
+                if (trendingErrorMessage != null && mediaItems.isEmpty()) {
                     CenterErrorState(onRetryClick = onRetryClick)
                 }
             } else {
@@ -144,7 +147,7 @@ private fun TrendingMediaContent(
 
                 if (isSearchLoading && shownItems.isEmpty()) {
                     CenterLoadingIndicator()
-                } else if (errorMessage != null && shownItems.isEmpty()) {
+                } else if (searchErrorMessage != null && shownItems.isEmpty()) {
                     CenterMessage(
                         text = stringResource(R.string.message_could_not_load_items),
                         color = MaterialTheme.colorScheme.error
