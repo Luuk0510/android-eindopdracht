@@ -48,7 +48,8 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val isTopLevelScreen = currentDestination?.route == Screen.Home.route || currentDestination?.route == Screen.Saved.route
+    val isTopLevelScreen =
+        currentDestination?.route == Screen.Home.route || currentDestination?.route == Screen.Saved.route
     val isSavedScreen = currentDestination?.route == Screen.Saved.route
     var searchText by remember { mutableStateOf("") }
     var showSearchField by remember { mutableStateOf(false) }
@@ -74,27 +75,7 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { snackbarData ->
-                Snackbar(
-                    shape = RoundedCornerShape(18.dp),
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    dismissAction = {
-                        IconButton(onClick = { snackbarData.dismiss() }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.content_close),
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                        }
-                    }
-                ) {
-                    androidx.compose.material3.Text(
-                        text = snackbarData.visuals.message,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
+            AppSnackbarHost(snackbarHostState = snackbarHostState)
         },
         topBar = {
             if (isTopLevelScreen) {
@@ -174,6 +155,31 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
                     showSortDialogState.value = false
                 },
                 onDismiss = { showSortDialogState.value = false }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppSnackbarHost(snackbarHostState: SnackbarHostState) {
+    SnackbarHost(hostState = snackbarHostState) { snackbarData ->
+        Snackbar(
+            shape = RoundedCornerShape(18.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            dismissAction = {
+                IconButton(onClick = { snackbarData.dismiss() }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.content_close),
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+        ) {
+            androidx.compose.material3.Text(
+                text = snackbarData.visuals.message,
+                style = MaterialTheme.typography.titleMedium
             )
         }
     }
