@@ -5,7 +5,8 @@ import androidx.core.content.edit
 import com.luuk.showtracker.data.model.UserProfile
 
 class ProfileStorage(context: Context) {
-    private val sharedPreferences = context.getSharedPreferences(ProfileStorageDefaults.PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val sharedPreferences =
+        context.getSharedPreferences(ProfileStorageDefaults.PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     fun loadProfile(): UserProfile {
         return UserProfile(
