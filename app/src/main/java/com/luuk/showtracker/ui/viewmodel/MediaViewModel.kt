@@ -63,11 +63,11 @@ class MediaViewModel(
     private val _isSearchLoading = MutableStateFlow(false)
     val isSearchLoading: StateFlow<Boolean> = _isSearchLoading.asStateFlow()
 
-    private val _trendingErrorMessage = MutableStateFlow<String?>(null)
-    val trendingErrorMessage: StateFlow<String?> = _trendingErrorMessage.asStateFlow()
+    private val _trendingErrorMessage = MutableStateFlow<Int?>(null)
+    val trendingErrorMessage: StateFlow<Int?> = _trendingErrorMessage.asStateFlow()
 
-    private val _searchErrorMessage = MutableStateFlow<String?>(null)
-    val searchErrorMessage: StateFlow<String?> = _searchErrorMessage.asStateFlow()
+    private val _searchErrorMessage = MutableStateFlow<Int?>(null)
+    val searchErrorMessage: StateFlow<Int?> = _searchErrorMessage.asStateFlow()
 
     private val _snackbarMessages = MutableSharedFlow<Int>(
         extraBufferCapacity = 1,
@@ -102,7 +102,7 @@ class MediaViewModel(
                 }
                 _trendingErrorMessage.value = null
             } catch (error: Exception) {
-                _trendingErrorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+                _trendingErrorMessage.value = R.string.message_unknown_error
             } finally {
                 _isTrendingLoading.value = false
             }
@@ -143,7 +143,7 @@ class MediaViewModel(
                 throw error
             } catch (error: Exception) {
                 _searchResults.value = emptyList()
-                _searchErrorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+                _searchErrorMessage.value = R.string.message_unknown_error
             } finally {
                 _isSearchLoading.value = false
             }
@@ -255,6 +255,5 @@ class MediaViewModel(
 }
 
 private const val DEFAULT_PROFILE_NAME = "User"
-private const val UNKNOWN_ERROR_MESSAGE = "Unknown error occurred"
 private const val REVIEW_DATE_TIME_PATTERN = "dd-MM-yyyy HH:mm"
 private const val SEARCH_DEBOUNCE_MS = 300L

@@ -32,6 +32,7 @@
     <string name="message_could_not_load_items">Could not load items.</string>
     <string name="message_check_connection">Check your internet connection and try again.</string>
     <string name="message_unknown">Unknown</string>
+    <string name="message_unknown_error">Unknown error occurred</string>
     <string name="action_try_again">Try again</string>
     <string name="snackbar_saved_added">Added to saved</string>
     <string name="snackbar_saved_removed">Removed from saved</string>

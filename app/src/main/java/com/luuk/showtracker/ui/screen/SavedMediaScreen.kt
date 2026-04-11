@@ -180,7 +180,7 @@ private fun SavedFilterRow(
                     selectedLabelColor = MaterialTheme.colorScheme.onSecondary
                 ),
                 label = {
-                    Text(text = stringResource(filter.labelResId))
+                    Text(text = stringResource(filter.labelResId()))
                 }
             )
         }
@@ -264,6 +264,14 @@ private fun TmdbMediaItem.matchesSavedFilter(
         SavedFilter.ALL -> true
         SavedFilter.WATCHED -> watchedIds.contains(id)
         SavedFilter.UNWATCHED -> !watchedIds.contains(id)
+    }
+}
+
+private fun SavedFilter.labelResId(): Int {
+    return when (this) {
+        SavedFilter.ALL -> R.string.saved_filter_all
+        SavedFilter.WATCHED -> R.string.saved_filter_watched
+        SavedFilter.UNWATCHED -> R.string.saved_filter_unwatched
     }
 }
 
