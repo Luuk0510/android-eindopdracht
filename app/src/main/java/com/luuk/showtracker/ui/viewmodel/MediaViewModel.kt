@@ -1,23 +1,28 @@
 package com.luuk.showtracker.ui.viewmodel
 
-import com.luuk.showtracker.BuildConfig
-import com.luuk.showtracker.data.api.TmdbService
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.luuk.showtracker.BuildConfig
+import com.luuk.showtracker.R
+import com.luuk.showtracker.data.api.TmdbService
 import com.luuk.showtracker.data.local.ProfileStorage
 import com.luuk.showtracker.data.local.ReviewStorage
 import com.luuk.showtracker.data.local.SavedMediaStorage
-import com.luuk.showtracker.data.local.WatchlistPreferences
 import com.luuk.showtracker.data.local.WatchedStorage
+import com.luuk.showtracker.data.local.WatchlistPreferences
 import com.luuk.showtracker.data.model.MediaReview
 import com.luuk.showtracker.data.model.TmdbMediaItem
 import com.luuk.showtracker.data.model.UserProfile
 import com.luuk.showtracker.data.model.WatchlistSortOption
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -52,11 +57,23 @@ class MediaViewModel(
     private val _watchedIds = MutableStateFlow(watchedStorage.loadWatchedIds())
     val watchedIds: StateFlow<Set<Int>> = _watchedIds.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _isTrendingLoading = MutableStateFlow(false)
+    val isTrendingLoading: StateFlow<Boolean> = _isTrendingLoading.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    private val _isSearchLoading = MutableStateFlow(false)
+    val isSearchLoading: StateFlow<Boolean> = _isSearchLoading.asStateFlow()
+
+    private val _trendingErrorMessage = MutableStateFlow<Int?>(null)
+    val trendingErrorMessage: StateFlow<Int?> = _trendingErrorMessage.asStateFlow()
+
+    private val _searchErrorMessage = MutableStateFlow<Int?>(null)
+    val searchErrorMessage: StateFlow<Int?> = _searchErrorMessage.asStateFlow()
+
+    private val _snackbarMessages = MutableSharedFlow<Int>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val snackbarMessages: SharedFlow<Int> = _snackbarMessages
 
     private var currentPage = 1
     private var isLastPage = false
@@ -68,10 +85,10 @@ class MediaViewModel(
     }
 
     fun loadNextPage() {
-        if (_isLoading.value || isLastPage) return
+        if (_isTrendingLoading.value || isLastPage) return
 
         viewModelScope.launch {
-            _isLoading.value = true
+            _isTrendingLoading.value = true
             try {
                 val newItems = tmdbService.getTrending(
                     apiKey = BuildConfig.TMDB_API_KEY,
@@ -83,13 +100,23 @@ class MediaViewModel(
                     _mediaItems.value += newItems
                     currentPage++
                 }
-                _errorMessage.value = null
+                _trendingErrorMessage.value = null
             } catch (error: Exception) {
-                _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+                _trendingErrorMessage.value = R.string.message_unknown_error
+            } finally {
+                _isTrendingLoading.value = false
             }
-
-            _isLoading.value = false
         }
+    }
+
+    fun refreshTrending() {
+        if (_isTrendingLoading.value) return
+
+        _mediaItems.value = emptyList()
+        currentPage = 1
+        isLastPage = false
+        _trendingErrorMessage.value = null
+        loadNextPage()
     }
 
     fun searchMedia(query: String) {
@@ -97,26 +124,29 @@ class MediaViewModel(
 
         if (query.isBlank()) {
             _searchResults.value = emptyList()
-            _errorMessage.value = null
+            _isSearchLoading.value = false
+            _searchErrorMessage.value = null
             return
         }
 
         searchJob = viewModelScope.launch {
             delay(SEARCH_DEBOUNCE_MS)
-            _isLoading.value = true
+            _isSearchLoading.value = true
 
             try {
                 _searchResults.value = tmdbService.searchMedia(
                     apiKey = BuildConfig.TMDB_API_KEY,
                     query = query
                 )
-                _errorMessage.value = null
+                _searchErrorMessage.value = null
+            } catch (error: CancellationException) {
+                throw error
             } catch (error: Exception) {
                 _searchResults.value = emptyList()
-                _errorMessage.value = error.message ?: UNKNOWN_ERROR_MESSAGE
+                _searchErrorMessage.value = R.string.message_unknown_error
+            } finally {
+                _isSearchLoading.value = false
             }
-
-            _isLoading.value = false
         }
     }
 
@@ -126,8 +156,10 @@ class MediaViewModel(
 
         if (isAlreadySaved) {
             _savedItems.value = currentSavedItems.filterNot { it.id == item.id }
+            showSnackbar(R.string.snackbar_saved_removed)
         } else {
             _savedItems.value = listOf(item) + currentSavedItems
+            showSnackbar(R.string.snackbar_saved_added)
         }
 
         savedMediaStorage.saveSavedMedia(_savedItems.value)
@@ -140,6 +172,7 @@ class MediaViewModel(
         )
         _profile.value = updatedProfile
         profileStorage.saveProfile(updatedProfile)
+        showSnackbar(R.string.snackbar_profile_saved)
     }
 
     fun toggleWatched(itemId: Int) {
@@ -178,6 +211,7 @@ class MediaViewModel(
         updatedReviews[itemId] = review
         _reviews.value = updatedReviews
         reviewStorage.saveReviews(_reviews.value)
+        showSnackbar(R.string.snackbar_review_saved)
     }
 
     fun deleteReview(itemId: Int) {
@@ -185,6 +219,7 @@ class MediaViewModel(
         updatedReviews.remove(itemId)
         _reviews.value = updatedReviews
         reviewStorage.saveReviews(_reviews.value)
+        showSnackbar(R.string.snackbar_review_deleted)
     }
 
     fun selectMediaItem(item: TmdbMediaItem) {
@@ -213,9 +248,12 @@ class MediaViewModel(
         val formatter = DateTimeFormatter.ofPattern(REVIEW_DATE_TIME_PATTERN)
         return LocalDateTime.now().format(formatter)
     }
+
+    private fun showSnackbar(messageResId: Int) {
+        _snackbarMessages.tryEmit(messageResId)
+    }
 }
 
 private const val DEFAULT_PROFILE_NAME = "User"
-private const val UNKNOWN_ERROR_MESSAGE = "Unknown error occurred"
 private const val REVIEW_DATE_TIME_PATTERN = "dd-MM-yyyy HH:mm"
 private const val SEARCH_DEBOUNCE_MS = 300L

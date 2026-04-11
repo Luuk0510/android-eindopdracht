@@ -28,16 +28,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import com.luuk.showtracker.R
 import com.luuk.showtracker.ui.component.ProfileAvatar
 
@@ -50,9 +49,7 @@ internal fun ShowTrackerBottomBar(
     onWatchlistClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
-    NavigationBar(
-        windowInsets = WindowInsets(0, 0, 0, 0)
-    ) {
+    NavigationBar {
         NavigationBarItem(
             icon = {
                 Icon(

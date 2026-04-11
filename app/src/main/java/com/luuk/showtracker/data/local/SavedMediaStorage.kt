@@ -8,7 +8,10 @@ import org.json.JSONObject
 
 class SavedMediaStorage(context: Context) {
     private val sharedPreferences =
-        context.getSharedPreferences("saved_media_storage", Context.MODE_PRIVATE)
+        context.getSharedPreferences(
+            SavedMediaStorageDefaults.PREFERENCES_NAME,
+            Context.MODE_PRIVATE
+        )
 
     fun loadSavedMedia(): List<TmdbMediaItem> {
         val json = sharedPreferences.getString(SavedMediaStorageDefaults.SAVED_MEDIA_KEY, null)
@@ -25,13 +28,15 @@ class SavedMediaStorage(context: Context) {
 
             var posterPath = itemObject.optString(SavedMediaStorageDefaults.POSTER_PATH_FIELD)
             if (posterPath.isBlank()) {
-                posterPath = itemObject.optString(SavedMediaStorageDefaults.LEGACY_POSTER_PATH_FIELD)
+                posterPath =
+                    itemObject.optString(SavedMediaStorageDefaults.LEGACY_POSTER_PATH_FIELD)
             }
 
             savedMedia.add(
                 TmdbMediaItem(
                     id = itemObject.optInt(SavedMediaStorageDefaults.ID_FIELD),
-                    title = itemObject.optString(SavedMediaStorageDefaults.TITLE_FIELD).nullIfBlank(),
+                    title = itemObject.optString(SavedMediaStorageDefaults.TITLE_FIELD)
+                        .nullIfBlank(),
                     name = itemObject.optString(SavedMediaStorageDefaults.NAME_FIELD).nullIfBlank(),
                     mediaType = mediaType.nullIfBlank(),
                     overview = itemObject.optString(SavedMediaStorageDefaults.OVERVIEW_FIELD),
@@ -39,7 +44,8 @@ class SavedMediaStorage(context: Context) {
                         itemObject.optJSONArray(SavedMediaStorageDefaults.GENRE_IDS_FIELD)
                             ?: itemObject.optJSONArray(SavedMediaStorageDefaults.LEGACY_GENRE_IDS_FIELD)
                     ),
-                    releaseDate = itemObject.optString(SavedMediaStorageDefaults.RELEASE_DATE_FIELD).nullIfBlank(),
+                    releaseDate = itemObject.optString(SavedMediaStorageDefaults.RELEASE_DATE_FIELD)
+                        .nullIfBlank(),
                     posterPath = posterPath.nullIfBlank()
                 )
             )
@@ -89,6 +95,7 @@ private fun String.nullIfBlank(): String? {
 }
 
 private object SavedMediaStorageDefaults {
+    const val PREFERENCES_NAME = "saved_media_storage"
     const val SAVED_MEDIA_KEY = "saved_media_json"
     const val ID_FIELD = "id"
     const val TITLE_FIELD = "title"

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">ShowTracker</string>
     <string name="nav_trending">Trending</string>
-    <string name="nav_watchlist">Watchlist</string>
+    <string name="nav_watchlist">Saved</string>
     <string name="nav_profile">Profile</string>
     <string name="topbar_search">Search</string>
     <string name="topbar_search_by_name">Search by name</string>
@@ -16,6 +16,9 @@
     <string name="profile_remove_photo">Remove photo</string>
     <string name="profile_name_label">Profile name</string>
     <string name="profile_save">Save profile</string>
+    <string name="profile_stat_saved">Saved</string>
+    <string name="profile_stat_watched">Watched</string>
+    <string name="profile_stat_reviews">Reviews</string>
     <string name="content_close">Close</string>
 
     <string name="sort_watchlist_title">Sort watchlist</string>
@@ -25,8 +28,28 @@
     <string name="sort_title_desc">Z-A</string>
 
     <string name="message_no_results">No results found.</string>
-    <string name="message_no_watchlist_items">No watchlist items yet.</string>
+    <string name="message_no_watchlist_items">No saved items yet.</string>
+    <string name="message_could_not_load_items">Could not load items.</string>
+    <string name="message_check_connection">Check your internet connection and try again.</string>
     <string name="message_unknown">Unknown</string>
+    <string name="message_unknown_error">Unknown error occurred</string>
+    <string name="action_try_again">Try again</string>
+    <string name="snackbar_saved_added">Added to saved</string>
+    <string name="snackbar_saved_removed">Removed from saved</string>
+    <string name="snackbar_profile_saved">Profile updated</string>
+    <string name="snackbar_review_saved">Review saved</string>
+    <string name="snackbar_review_deleted">Review deleted</string>
+    <string name="saved_empty_title">Nothing saved yet.</string>
+    <string name="saved_empty_subtitle">Save movies or shows from Trending to see them here.</string>
+    <string name="saved_empty_watched_title">No watched items yet.</string>
+    <string name="saved_empty_watched_subtitle">Mark saved movies or shows as watched to see them here.</string>
+    <string name="saved_empty_unwatched_title">No unwatched items left.</string>
+    <string name="saved_empty_unwatched_subtitle">Everything in your saved list is marked as watched.</string>
+    <string name="saved_no_results_title">No matching saved items.</string>
+    <string name="saved_no_results_subtitle">Try a different search term.</string>
+    <string name="saved_filter_all">All</string>
+    <string name="saved_filter_watched">Watched</string>
+    <string name="saved_filter_unwatched">Unwatched</string>
 
     <string name="content_watched">Watched</string>
     <string name="content_back">Back</string>
@@ -48,4 +71,8 @@
     <string name="detail_post_review">Post review</string>
     <string name="detail_delete_review">Delete review</string>
     <string name="detail_update_review">Update review</string>
+    <string name="detail_delete_review_confirm_title">Delete review?</string>
+    <string name="detail_delete_review_confirm_message">This will permanently remove your review.</string>
+    <string name="detail_delete_review_confirm_action">Delete</string>
+    <string name="detail_delete_review_cancel_action">Cancel</string>
 </resources>

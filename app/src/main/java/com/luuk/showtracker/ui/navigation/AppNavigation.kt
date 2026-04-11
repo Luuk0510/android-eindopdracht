@@ -1,20 +1,28 @@
 package com.luuk.showtracker.ui.navigation
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -23,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.luuk.showtracker.R
 import com.luuk.showtracker.data.model.genreNames
 import com.luuk.showtracker.ui.screen.MediaDetailScreen
 import com.luuk.showtracker.ui.screen.SavedMediaScreen
@@ -32,7 +41,10 @@ import com.luuk.showtracker.ui.viewmodel.MediaViewModel
 @Composable
 fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     val profile by viewModel.profile.collectAsState()
+    val savedItems by viewModel.savedItems.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
     val watchlistSortOption by viewModel.watchlistSortOption.collectAsState()
+    val watchedIds by viewModel.watchedIds.collectAsState()
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -43,14 +55,28 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     var showSearchField by remember { mutableStateOf(false) }
     val showProfileDialogState = remember { mutableStateOf(false) }
     val showSortDialogState = remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(currentDestination?.route) {
         showSearchField = false
         searchText = ""
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.snackbarMessages.collect { messageResId ->
+            snackbarHostState.showSnackbar(
+                message = context.getString(messageResId),
+                withDismissAction = true
+            )
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        snackbarHost = {
+            AppSnackbarHost(snackbarHostState = snackbarHostState)
+        },
         topBar = {
             if (isTopLevelScreen) {
                 ShowTrackerTopBar(
@@ -110,6 +136,9 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
         ProfileDialogHost(
             profileName = profile.name,
             profilePhotoUri = profile.photoUri,
+            savedCount = savedItems.size,
+            watchedCount = watchedIds.size,
+            reviewCount = reviews.size,
             showProfileDialog = showProfileDialogState.value,
             onDismiss = { showProfileDialogState.value = false },
             onSave = { name, photoUri ->
@@ -126,6 +155,31 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
                     showSortDialogState.value = false
                 },
                 onDismiss = { showSortDialogState.value = false }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppSnackbarHost(snackbarHostState: SnackbarHostState) {
+    SnackbarHost(hostState = snackbarHostState) { snackbarData ->
+        Snackbar(
+            shape = RoundedCornerShape(18.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            dismissAction = {
+                IconButton(onClick = { snackbarData.dismiss() }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.content_close),
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+        ) {
+            androidx.compose.material3.Text(
+                text = snackbarData.visuals.message,
+                style = MaterialTheme.typography.titleMedium
             )
         }
     }
@@ -184,13 +238,6 @@ fun SetupAppNavigation(
             if (mediaItem == null) {
                 LaunchedEffect(itemId) {
                     navController.popBackStack()
-                }
-
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
                 }
                 return@composable
             }
