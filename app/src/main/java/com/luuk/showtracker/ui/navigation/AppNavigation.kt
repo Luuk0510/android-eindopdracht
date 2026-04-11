@@ -2,8 +2,12 @@ package com.luuk.showtracker.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -18,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.luuk.showtracker.R
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -57,7 +62,10 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
 
     LaunchedEffect(Unit) {
         viewModel.snackbarMessages.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(
+                message = message,
+                withDismissAction = true
+            )
         }
     }
 
@@ -68,7 +76,16 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
                 Snackbar(
                     shape = RoundedCornerShape(18.dp),
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    dismissAction = {
+                        IconButton(onClick = { snackbarData.dismiss() }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.content_close),
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                    }
                 ) {
                     androidx.compose.material3.Text(
                         text = snackbarData.visuals.message,

@@ -152,6 +152,9 @@ fun ReviewDialogContent(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = Color.White,
+            textContentColor = TextMuted,
             title = {
                 Text(text = stringResource(R.string.detail_delete_review_confirm_title))
             },
