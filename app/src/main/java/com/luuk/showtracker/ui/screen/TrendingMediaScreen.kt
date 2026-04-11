@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
@@ -282,6 +283,7 @@ fun MediaItemRow(
     item: TmdbMediaItem,
     isWatched: Boolean = false,
     ratingBadge: String? = null,
+    onRemoveClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     Column(
@@ -324,6 +326,28 @@ fun MediaItemRow(
                                 horizontal = TrendingMediaScreenDefaults.WatchedBadgeHorizontalPadding,
                                 vertical = TrendingMediaScreenDefaults.WatchedBadgeVerticalPadding
                             )
+                        )
+                    }
+                }
+
+                if (onRemoveClick != null) {
+                    Surface(
+                        color = TrendingMediaScreenDefaults.MediaOverlayColor,
+                        shape = RoundedCornerShape(
+                            bottomEnd = TrendingMediaScreenDefaults.MediaBadgeCornerRadius
+                        ),
+                        modifier = Modifier.align(Alignment.TopStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.BookmarkRemove,
+                            contentDescription = stringResource(R.string.content_remove_from_watchlist),
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier
+                                .clickable(onClick = onRemoveClick)
+                                .padding(
+                                    horizontal = TrendingMediaScreenDefaults.RemoveBadgeHorizontalPadding,
+                                    vertical = TrendingMediaScreenDefaults.RemoveBadgeVerticalPadding
+                                )
                         )
                     }
                 }
@@ -392,6 +416,8 @@ private object TrendingMediaScreenDefaults {
     val MediaBadgeCornerRadius = 12.dp
     val WatchedBadgeHorizontalPadding = 10.dp
     val WatchedBadgeVerticalPadding = 8.dp
+    val RemoveBadgeHorizontalPadding = 10.dp
+    val RemoveBadgeVerticalPadding = 8.dp
     val RatingBadgeHorizontalPadding = 10.dp
     val RatingBadgeVerticalPadding = 6.dp
     val RatingStarSpacing = 4.dp

@@ -74,6 +74,7 @@ fun SavedMediaScreen(
         isWatched = { itemId -> watchedIds.contains(itemId) },
         ratingBadge = { itemId -> reviews[itemId]?.rating?.toString() },
         onFilterSelected = { selectedFilter = it },
+        onRemoveClick = { item -> viewModel.toggleSaved(item) },
         onItemClick = onItemClick
     )
 }
@@ -89,6 +90,7 @@ private fun SavedMediaContent(
     isWatched: (Int) -> Boolean,
     ratingBadge: (Int) -> String?,
     onFilterSelected: (SavedFilter) -> Unit,
+    onRemoveClick: (TmdbMediaItem) -> Unit,
     onItemClick: (Int) -> Unit
 ) {
     when {
@@ -125,6 +127,7 @@ private fun SavedMediaContent(
                     columnCount = columnCount,
                     isWatched = isWatched,
                     ratingBadge = ratingBadge,
+                    onRemoveClick = onRemoveClick,
                     onItemClick = onItemClick
                 )
             }
@@ -221,6 +224,7 @@ private fun WatchlistGrid(
     columnCount: Int,
     isWatched: (Int) -> Boolean,
     ratingBadge: (Int) -> String?,
+    onRemoveClick: (TmdbMediaItem) -> Unit,
     onItemClick: (Int) -> Unit
 ) {
     LazyVerticalGrid(
@@ -235,6 +239,7 @@ private fun WatchlistGrid(
                 item = item,
                 isWatched = isWatched(item.id),
                 ratingBadge = ratingBadge(item.id),
+                onRemoveClick = { onRemoveClick(item) },
                 onClick = { onItemClick(item.id) }
             )
         }
