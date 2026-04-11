@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,7 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     val showProfileDialogState = remember { mutableStateOf(false) }
     val showSortDialogState = remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(currentDestination?.route) {
         showSearchField = false
@@ -61,9 +63,9 @@ fun ShowTrackerApp(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
     }
 
     LaunchedEffect(Unit) {
-        viewModel.snackbarMessages.collect { message ->
+        viewModel.snackbarMessages.collect { messageResId ->
             snackbarHostState.showSnackbar(
-                message = message,
+                message = context.getString(messageResId),
                 withDismissAction = true
             )
         }

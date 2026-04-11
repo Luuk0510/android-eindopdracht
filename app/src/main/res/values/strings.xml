@@ -33,6 +33,11 @@
     <string name="message_check_connection">Check your internet connection and try again.</string>
     <string name="message_unknown">Unknown</string>
     <string name="action_try_again">Try again</string>
+    <string name="snackbar_saved_added">Added to saved</string>
+    <string name="snackbar_saved_removed">Removed from saved</string>
+    <string name="snackbar_profile_saved">Profile updated</string>
+    <string name="snackbar_review_saved">Review saved</string>
+    <string name="snackbar_review_deleted">Review deleted</string>
     <string name="saved_empty_title">Nothing saved yet.</string>
     <string name="saved_empty_subtitle">Save movies or shows from Trending to see them here.</string>
     <string name="saved_empty_watched_title">No watched items yet.</string>
